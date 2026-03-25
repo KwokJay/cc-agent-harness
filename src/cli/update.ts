@@ -51,6 +51,7 @@ async function updateAgentsMd(
     projectName: config.project.name,
     language: config.project.language,
     delegationFirst: String(config.agents.delegation_first),
+    customRules: config.templates.agents_md.custom_rules,
   });
 
   const agentsMdPath = resolve(cwd, "AGENTS.md");

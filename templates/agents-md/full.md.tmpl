@@ -13,6 +13,9 @@
 - Run linters/formatters before finalizing changes.
 - Do not create small helper methods referenced only once.
 - Prefer exhaustive match/switch statements over wildcard arms.
+{{#each customRules}}
+- {{.}}
+{{/each}}
 
 ## Delegation-First Philosophy
 

@@ -84,6 +84,7 @@ export async function runSetup(opts: SetupOptions): Promise<void> {
         projectName,
         language,
         delegationFirst: "true",
+        customRules: [],
       });
       await writeFile(agentsMdPath, rendered, "utf-8");
       console.log(`  Generated AGENTS.md (${variant} variant).`);

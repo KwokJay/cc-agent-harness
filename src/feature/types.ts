@@ -1,4 +1,4 @@
-export type FeatureStage = "stable" | "experimental" | "deprecated";
+export type FeatureStage = "stable" | "experimental" | "deprecated" | "removed";
 
 export interface FeatureSpec {
   id: string;

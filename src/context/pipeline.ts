@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname, parse as parsePath } from "node:path";
 import type { HarnessConfig } from "../config/schema.js";
 import { discoverSkills } from "../skill/manager.js";
-import type { ContextBlock, ContextPipelineResult } from "./types.js";
+import type { ContextBlock, ContextPipelineResult, ContextBuildOptions, TagStyle } from "./types.js";
 
 export class ContextPipeline {
   private blocks: ContextBlock[] = [];
@@ -17,6 +17,22 @@ export class ContextPipeline {
     if (existsSync(agentsMd)) {
       const content = await readFile(agentsMd, "utf-8");
       this.addBlock("project-doc", content, 10);
+    }
+  }
+
+  /**
+   * Walk from projectRoot to cwd, collecting AGENTS.md files.
+   * Deeper files override shallower ones (later blocks have higher priority).
+   */
+  async addHierarchicalDocs(cwd: string, projectRoot?: string): Promise<void> {
+    const root = projectRoot ?? await findProjectRoot(cwd);
+    const docs = collectAgentsMdFiles(root, cwd);
+
+    for (let i = 0; i < docs.length; i++) {
+      const filePath = docs[i];
+      const content = await readFile(filePath, "utf-8");
+      const depth = i;
+      this.addBlock(`agents-md-${depth}`, content, 10 + depth);
     }
   }
 
@@ -43,14 +59,16 @@ export class ContextPipeline {
     this.addBlock(tag, content, priority);
   }
 
-  build(): ContextPipelineResult {
+  build(options?: ContextBuildOptions): ContextPipelineResult {
     const sorted = [...this.blocks].sort((a, b) => a.priority - b.priority);
+    const tagStyle: TagStyle = options?.tagStyle ?? "markdown";
     const parts: string[] = [];
 
     for (const block of sorted) {
-      parts.push(`<!-- ${block.tag} -->`);
+      const [open, close] = formatTags(block.tag, tagStyle);
+      if (open) parts.push(open);
       parts.push(block.content);
-      parts.push(`<!-- /${block.tag} -->`);
+      if (close) parts.push(close);
       parts.push("");
     }
 
@@ -62,5 +80,57 @@ export class ContextPipeline {
 
   clear(): void {
     this.blocks = [];
+  }
+}
+
+function formatTags(tag: string, style: TagStyle): [string | null, string | null] {
+  switch (style) {
+    case "xml":
+      return [`<${tag}>`, `</${tag}>`];
+    case "markdown":
+      return [`<!-- ${tag} -->`, `<!-- /${tag} -->`];
+    case "none":
+      return [null, null];
+  }
+}
+
+function collectAgentsMdFiles(root: string, cwd: string): string[] {
+  const files: string[] = [];
+  let current = resolve(root);
+  const target = resolve(cwd);
+
+  while (true) {
+    const agentsMd = resolve(current, "AGENTS.md");
+    if (existsSync(agentsMd)) {
+      files.push(agentsMd);
+    }
+    if (current === target) break;
+
+    const next = resolve(current, relativeStep(current, target));
+    if (next === current) break;
+    current = next;
+  }
+
+  return files;
+}
+
+function relativeStep(from: string, to: string): string {
+  const fromParts = from.split("/").filter(Boolean);
+  const toParts = to.split("/").filter(Boolean);
+  if (toParts.length > fromParts.length) {
+    return toParts[fromParts.length];
+  }
+  return "";
+}
+
+async function findProjectRoot(cwd: string): Promise<string> {
+  let dir = resolve(cwd);
+  while (true) {
+    if (existsSync(resolve(dir, ".harness")) || existsSync(resolve(dir, ".git"))) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) return cwd;
+    dir = parent;
   }
 }

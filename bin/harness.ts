@@ -75,6 +75,27 @@ configCmd
   });
 
 program
+  .command("run <task>")
+  .description("Execute a named task from workflows.commands or adapter")
+  .action(async (task: string) => {
+    const { runTask } = await import("../src/cli/run.js");
+    await runTask(task);
+  });
+
+const schemaCmd = program
+  .command("schema")
+  .description("Schema management");
+
+schemaCmd
+  .command("generate")
+  .description("Generate JSON Schema from config definition")
+  .option("-o, --output <path>", "Output file path", ".harness/schema.json")
+  .action(async (opts) => {
+    const { runSchemaGenerate } = await import("../src/cli/schema.js");
+    await runSchemaGenerate(opts);
+  });
+
+program
   .command("scaffold")
   .description("Scaffold a new skill")
   .argument("<type>", "Resource type to scaffold (skill)")

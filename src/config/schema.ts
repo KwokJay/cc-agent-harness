@@ -29,8 +29,16 @@ export const skillsConfigSchema = z.object({
   auto_detect: z.boolean().default(true),
 });
 
+export const verificationStageSchema = z.object({
+  name: z.string(),
+  command: z.string().optional(),
+  fail_fast: z.boolean().default(true),
+});
+
 export const verificationConfigSchema = z.object({
   checks: z.array(z.string()).default(["build", "test", "lint"]),
+  pipeline: z.array(verificationStageSchema).optional(),
+  fail_fast: z.boolean().default(true),
 });
 
 export const workflowsConfigSchema = z.object({

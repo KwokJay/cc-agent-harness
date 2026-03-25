@@ -15,6 +15,8 @@ export {
   providerMappingSchema,
   agentsConfigSchema,
   skillsConfigSchema,
+  verificationStageSchema,
+  verificationConfigSchema,
   workflowsConfigSchema,
   templatesConfigSchema,
   projectConfigSchema,
@@ -52,7 +54,7 @@ export { renderFile, renderDirectory } from "./template/renderer.js";
 export { AuditLogger, type AuditEntry, type AuditEventKind } from "./audit/index.js";
 
 // Context
-export { ContextPipeline, type ContextBlock, type ContextPipelineResult } from "./context/index.js";
+export { ContextPipeline, type ContextBlock, type ContextPipelineResult, type ContextBuildOptions, type TagStyle } from "./context/index.js";
 
 // Plugins
 export { PluginRegistry, type HarnessPlugin } from "./plugin/index.js";

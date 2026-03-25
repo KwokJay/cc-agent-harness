@@ -1,27 +1,24 @@
 import { execSync } from "node:child_process";
 import { loadConfig, configExists } from "../config/loader.js";
 import { detectProjectType } from "../adapter/detector.js";
-import type { CommandDefinition } from "../adapter/interface.js";
 
 export interface VerifyOptions {
   failFast?: boolean;
 }
 
-interface VerifyResult {
-  check: string;
+interface StageResult {
+  stage: string;
   command: string;
-  status: "pass" | "fail";
+  status: "pass" | "fail" | "skip";
+  durationMs: number;
   output?: string;
 }
 
 export async function runVerify(opts: VerifyOptions): Promise<void> {
   const cwd = process.cwd();
-  const failFast = opts.failFast ?? false;
 
   console.log("Agent Harness Verification");
   console.log("==========================\n");
-
-  const commandMap = await resolveCommands(cwd);
 
   if (!configExists(cwd)) {
     console.log("  No harness configuration found. Run `agent-harness setup` first.");
@@ -29,35 +26,42 @@ export async function runVerify(opts: VerifyOptions): Promise<void> {
   }
 
   const config = await loadConfig({ cwd });
-  const checks = config.workflows.verification.checks;
+  const commandMap = await resolveCommands(cwd);
+  const globalFailFast = opts.failFast ?? config.workflows.verification.fail_fast;
 
-  if (checks.length === 0) {
-    console.log("  No verification checks configured.");
+  const stages = buildPipeline(config, commandMap);
+
+  if (stages.length === 0) {
+    console.log("  No verification stages configured.");
     return;
   }
 
-  const results: VerifyResult[] = [];
+  const results: StageResult[] = [];
   let failed = false;
 
-  for (const check of checks) {
-    const command = commandMap.get(check) ?? config.workflows.commands[check];
-    if (!command) {
-      console.log(`  [SKIP] ${check} — no command configured`);
-      results.push({ check, command: "", status: "fail", output: "no command configured" });
+  for (const stage of stages) {
+    if (!stage.command) {
+      console.log(`  [SKIP] ${stage.name} — no command configured`);
+      results.push({ stage: stage.name, command: "", status: "skip", durationMs: 0 });
       continue;
     }
 
+    const start = Date.now();
     try {
-      execSync(command, { cwd, stdio: "pipe", timeout: 120_000 });
-      console.log(`  [PASS] ${check} — ${command}`);
-      results.push({ check, command, status: "pass" });
+      execSync(stage.command, { cwd, stdio: "pipe", timeout: 120_000 });
+      const durationMs = Date.now() - start;
+      console.log(`  [PASS] ${stage.name} — ${stage.command} (${durationMs}ms)`);
+      results.push({ stage: stage.name, command: stage.command, status: "pass", durationMs });
     } catch (err) {
+      const durationMs = Date.now() - start;
       const output = err instanceof Error ? (err as { stderr?: Buffer }).stderr?.toString() ?? err.message : String(err);
-      console.log(`  [FAIL] ${check} — ${command}`);
-      results.push({ check, command, status: "fail", output });
+      console.log(`  [FAIL] ${stage.name} — ${stage.command} (${durationMs}ms)`);
+      results.push({ stage: stage.name, command: stage.command, status: "fail", durationMs, output });
       failed = true;
-      if (failFast) {
-        console.log("\n  --fail-fast: stopping after first failure.");
+
+      const shouldStop = globalFailFast || stage.failFast;
+      if (shouldStop) {
+        console.log(`\n  Stopping: fail_fast enabled for stage "${stage.name}".`);
         break;
       }
     }
@@ -65,11 +69,41 @@ export async function runVerify(opts: VerifyOptions): Promise<void> {
 
   const passed = results.filter((r) => r.status === "pass").length;
   const failures = results.filter((r) => r.status === "fail").length;
-  console.log(`\nVerification: ${passed} passed, ${failures} failed out of ${results.length} checks.`);
+  const skipped = results.filter((r) => r.status === "skip").length;
+  const totalMs = results.reduce((sum, r) => sum + r.durationMs, 0);
+
+  console.log(`\nVerification: ${passed} passed, ${failures} failed, ${skipped} skipped (${totalMs}ms total)`);
 
   if (failed) {
     process.exitCode = 1;
   }
+}
+
+interface PipelineStage {
+  name: string;
+  command: string | undefined;
+  failFast: boolean;
+}
+
+function buildPipeline(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  commandMap: Map<string, string>,
+): PipelineStage[] {
+  const verification = config.workflows.verification;
+
+  if (verification.pipeline && verification.pipeline.length > 0) {
+    return verification.pipeline.map((s) => ({
+      name: s.name,
+      command: s.command ?? commandMap.get(s.name) ?? config.workflows.commands[s.name],
+      failFast: s.fail_fast,
+    }));
+  }
+
+  return verification.checks.map((check) => ({
+    name: check,
+    command: commandMap.get(check) ?? config.workflows.commands[check],
+    failFast: verification.fail_fast,
+  }));
 }
 
 async function resolveCommands(cwd: string): Promise<Map<string, string>> {
