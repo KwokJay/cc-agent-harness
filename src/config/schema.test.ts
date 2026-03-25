@@ -11,7 +11,7 @@ describe("config schema", () => {
     const result = harnessConfigSchema.parse(config);
     expect(result.project.name).toBe("test");
     expect(result.agents.delegation_first).toBe(true);
-    expect(result.agents.model_routing.low).toBe("haiku");
+    expect(result.agents.model_routing.low).toBe("low");
   });
 
   it("applies defaults for missing optional fields", () => {
@@ -19,7 +19,7 @@ describe("config schema", () => {
     const result = harnessConfigSchema.parse(config);
     expect(result.project.language).toBe("typescript");
     expect(result.agents.delegation_first).toBe(true);
-    expect(result.skills.directories).toEqual([".codex/skills", ".harness/skills"]);
+    expect(result.skills.directories).toEqual([".harness/skills"]);
     expect(result.workflows.verification.checks).toEqual(["build", "test", "lint"]);
     expect(result.templates.agents_md.variant).toBe("standard");
   });
@@ -39,7 +39,7 @@ describe("config schema", () => {
       project: { name: "test" },
       agents: {
         definitions: [
-          { name: "my-agent", domain: "custom", tier: "sonnet" },
+          { name: "my-agent", domain: "custom", tier: "medium" },
         ],
       },
     };

@@ -40,12 +40,11 @@ export async function scaffoldSkill(
   });
   await writeFile(join(skillDir, "SKILL.md"), content, "utf-8");
 
-  await mkdir(join(skillDir, "agents"), { recursive: true });
-  await writeFile(
-    join(skillDir, "agents", "openai.yaml"),
-    `interface:\n  display_name: "${options.displayName}"\n  short_description: "${options.description}"\n`,
-    "utf-8",
+  const metadataContent = render(
+    "display_name: {{displayName}}\ndescription: {{description}}\n",
+    { displayName: options.displayName, description: options.description },
   );
+  await writeFile(join(skillDir, "metadata.yaml"), metadataContent, "utf-8");
 
   for (const res of options.resources ?? []) {
     await mkdir(join(skillDir, res), { recursive: true });

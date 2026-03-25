@@ -3,14 +3,14 @@ import { routeModel, inferComplexity } from "./router.js";
 
 describe("routeModel", () => {
   it("returns default routing", () => {
-    expect(routeModel("low")).toBe("haiku");
-    expect(routeModel("medium")).toBe("sonnet");
-    expect(routeModel("high")).toBe("opus");
+    expect(routeModel("low")).toBe("low");
+    expect(routeModel("medium")).toBe("medium");
+    expect(routeModel("high")).toBe("high");
   });
 
   it("respects custom routing", () => {
-    expect(routeModel("low", { low: "sonnet" })).toBe("sonnet");
-    expect(routeModel("high", { high: "sonnet" })).toBe("sonnet");
+    expect(routeModel("low", { low: "medium" })).toBe("medium");
+    expect(routeModel("high", { high: "medium" })).toBe("medium");
   });
 });
 

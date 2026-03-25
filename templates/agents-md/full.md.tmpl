@@ -31,11 +31,11 @@
 
 ## Smart Model Routing
 
-| Task Complexity | Model | When to Use |
-|-----------------|-------|-------------|
-| Simple lookup | haiku | "What does this return?" |
-| Standard work | sonnet | "Add error handling" |
-| Complex reasoning | opus | "Debug race condition" |
+| Task Complexity | Tier | When to Use |
+|-----------------|------|-------------|
+| Simple lookup | low | "What does this return?" |
+| Standard work | medium | "Add error handling" |
+| Complex reasoning | high | "Debug race condition" |
 
 ## Verification Protocol
 
@@ -69,28 +69,27 @@ Required evidence:
 
 Skills are discovered from:
 
-- `.codex/skills/`
 - `.harness/skills/`
 
 ## Agent Catalog
 
 ### Analysis
-- `architect-low` (haiku) / `architect-medium` (sonnet) / `architect` (opus)
+- `architect-low` (low) / `architect-medium` (medium) / `architect` (high)
 
 ### Execution
-- `executor-low` (haiku) / `executor` (sonnet) / `executor-high` (opus)
+- `executor-low` (low) / `executor` (medium) / `executor-high` (high)
 
 ### Search
-- `explore` (haiku) / `explore-medium` (sonnet) / `explore-high` (opus)
+- `explore` (low) / `explore-medium` (medium) / `explore-high` (high)
 
 ### Frontend
-- `designer-low` (haiku) / `designer` (sonnet) / `designer-high` (opus)
+- `designer-low` (low) / `designer` (medium) / `designer-high` (high)
 
 ### Testing
-- `qa-tester` (sonnet) / `qa-tester-high` (opus)
+- `qa-tester` (medium) / `qa-tester-high` (high)
 
 ### Code Review
-- `code-reviewer-low` (haiku) / `code-reviewer` (opus)
+- `code-reviewer-low` (low) / `code-reviewer` (high)
 
 ### Security
-- `security-reviewer-low` (haiku) / `security-reviewer` (opus)
+- `security-reviewer-low` (low) / `security-reviewer` (high)

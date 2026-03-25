@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const modelTierSchema = z.enum(["haiku", "sonnet", "opus"]);
+export const modelTierSchema = z.enum(["low", "medium", "high"]);
 
 export const agentDefinitionSchema = z.object({
   name: z.string(),
@@ -9,20 +9,23 @@ export const agentDefinitionSchema = z.object({
   description: z.string().optional(),
 });
 
+export const providerMappingSchema = z.record(z.string()).default({});
+
 export const agentsConfigSchema = z.object({
   delegation_first: z.boolean().default(true),
   model_routing: z
     .object({
-      low: modelTierSchema.default("haiku"),
-      medium: modelTierSchema.default("sonnet"),
-      high: modelTierSchema.default("opus"),
+      low: modelTierSchema.default("low"),
+      medium: modelTierSchema.default("medium"),
+      high: modelTierSchema.default("high"),
     })
     .default({}),
+  providers: providerMappingSchema,
   definitions: z.array(agentDefinitionSchema).default([]),
 });
 
 export const skillsConfigSchema = z.object({
-  directories: z.array(z.string()).default([".codex/skills", ".harness/skills"]),
+  directories: z.array(z.string()).default([".harness/skills"]),
   auto_detect: z.boolean().default(true),
 });
 
@@ -50,12 +53,15 @@ export const projectConfigSchema = z.object({
   description: z.string().default(""),
 });
 
+export const featuresConfigSchema = z.record(z.string(), z.boolean()).default({});
+
 export const harnessConfigSchema = z.object({
   project: projectConfigSchema,
   agents: agentsConfigSchema.default({}),
   skills: skillsConfigSchema.default({}),
   workflows: workflowsConfigSchema.default({}),
   templates: templatesConfigSchema.default({}),
+  features: featuresConfigSchema,
 });
 
 export type HarnessConfig = z.infer<typeof harnessConfigSchema>;

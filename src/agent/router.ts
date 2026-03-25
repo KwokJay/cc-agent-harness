@@ -9,9 +9,9 @@ export interface ModelRouting {
 }
 
 const DEFAULT_ROUTING: ModelRouting = {
-  low: "haiku",
-  medium: "sonnet",
-  high: "opus",
+  low: "low",
+  medium: "medium",
+  high: "high",
 };
 
 export function routeModel(

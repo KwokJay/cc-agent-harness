@@ -14,7 +14,6 @@ export async function runDoctor(): Promise<void> {
 
   checks.push(configHealthCheck(cwd));
   checks.push(agentsMdHealthCheck(cwd));
-  checks.push(skillsHealthCheck(cwd));
   checks.push(...toolHealthChecks());
 
   const adapter = await detectProjectType(cwd);
@@ -24,6 +23,8 @@ export async function runDoctor(): Promise<void> {
 
   if (configExists(cwd)) {
     const config = await loadConfig({ cwd });
+    checks.push(skillsHealthCheck(cwd, config.skills.directories));
+
     const registry = new AgentRegistry(config.agents.definitions);
     const counts = registry.count();
     checks.push({
@@ -33,6 +34,8 @@ export async function runDoctor(): Promise<void> {
         message: `Agent definitions: ${counts.custom} custom + ${counts.builtin} built-in`,
       }),
     });
+  } else {
+    checks.push(skillsHealthCheck(cwd));
   }
 
   const report = await runHealthChecks(checks);

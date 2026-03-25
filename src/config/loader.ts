@@ -10,6 +10,22 @@ export type { HarnessConfig };
 const PROJECT_CONFIG_PATH = ".harness/harness.config.yaml";
 const USER_CONFIG_PATH = ".harness/config.yaml";
 
+export interface ConfigLayer {
+  name: string;
+  path: string;
+  data: Record<string, unknown> | null;
+}
+
+export interface LoadConfigOptions {
+  cwd?: string;
+  extraLayers?: ConfigLayer[];
+}
+
+export interface LoadConfigResult {
+  config: HarnessConfig;
+  layers: ConfigLayer[];
+}
+
 async function readYamlFile(path: string): Promise<Record<string, unknown> | null> {
   if (!existsSync(path)) return null;
   const content = await readFile(path, "utf-8");
@@ -43,33 +59,51 @@ function deepMerge(
   return result;
 }
 
-export interface LoadConfigOptions {
-  cwd?: string;
-}
-
 /**
- * Load harness configuration with three-layer merge:
- * 1. Built-in defaults (lowest priority)
+ * Load harness configuration with N-layer merge and source tracking.
+ *
+ * Default layer order (lowest to highest priority):
+ * 1. Built-in defaults (via Zod schema defaults)
  * 2. User-level (~/.harness/config.yaml)
- * 3. Project-level (.harness/harness.config.yaml) (highest priority)
+ * 3. Project-level (.harness/harness.config.yaml)
+ * 4. Extra layers (programmatic overrides)
  */
 export async function loadConfig(opts?: LoadConfigOptions): Promise<HarnessConfig> {
+  const result = await loadConfigWithLayers(opts);
+  return result.config;
+}
+
+export async function loadConfigWithLayers(opts?: LoadConfigOptions): Promise<LoadConfigResult> {
   const cwd = opts?.cwd ?? process.cwd();
 
-  const projectPath = resolve(cwd, PROJECT_CONFIG_PATH);
-  const userPath = join(homedir(), USER_CONFIG_PATH);
+  const layers: ConfigLayer[] = [];
 
-  const userConfig = await readYamlFile(userPath);
-  const projectConfig = await readYamlFile(projectPath);
+  const userPath = join(homedir(), USER_CONFIG_PATH);
+  const userData = await readYamlFile(userPath);
+  layers.push({ name: "user", path: userPath, data: userData });
+
+  const projectPath = resolve(cwd, PROJECT_CONFIG_PATH);
+  const projectData = await readYamlFile(projectPath);
+  layers.push({ name: "project", path: projectPath, data: projectData });
+
+  if (opts?.extraLayers) {
+    layers.push(...opts.extraLayers);
+  }
 
   let merged: Record<string, unknown> = {};
-  if (userConfig) merged = deepMerge(merged, userConfig);
-  if (projectConfig) merged = deepMerge(merged, projectConfig);
+  for (const layer of layers) {
+    if (layer.data) {
+      merged = deepMerge(merged, layer.data);
+    }
+  }
 
-  return harnessConfigSchema.parse(merged);
+  const config = harnessConfigSchema.parse(merged);
+  return { config, layers };
 }
 
 export function configExists(cwd?: string): boolean {
   const dir = cwd ?? process.cwd();
-  return existsSync(resolve(dir, PROJECT_CONFIG_PATH));
+  const projectExists = existsSync(resolve(dir, PROJECT_CONFIG_PATH));
+  const userExists = existsSync(join(homedir(), USER_CONFIG_PATH));
+  return projectExists || userExists;
 }

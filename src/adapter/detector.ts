@@ -1,23 +1,14 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { ProjectAdapter } from "./interface.js";
-import { RustAdapter } from "./rust.js";
-import { TypeScriptAdapter } from "./typescript.js";
-import { PythonAdapter } from "./python.js";
+import { AdapterRegistry } from "./registry.js";
 
-const BUILT_IN_ADAPTERS: ProjectAdapter[] = [
-  new RustAdapter(),
-  new TypeScriptAdapter(),
-  new PythonAdapter(),
-];
+const defaultRegistry = new AdapterRegistry();
 
 export async function detectProjectType(
   cwd: string,
 ): Promise<ProjectAdapter | null> {
-  for (const adapter of BUILT_IN_ADAPTERS) {
-    if (await adapter.detect(cwd)) return adapter;
-  }
-  return null;
+  return defaultRegistry.detect(cwd);
 }
 
 export function detectLanguage(cwd: string): "rust" | "typescript" | "python" | "multi" {

@@ -12,7 +12,7 @@ describe("AgentRegistry", () => {
     const registry = new AgentRegistry();
     const agent = registry.get("executor");
     expect(agent).toBeDefined();
-    expect(agent!.tier).toBe("sonnet");
+    expect(agent!.tier).toBe("medium");
     expect(agent!.domain).toBe("execution");
   });
 
@@ -23,7 +23,7 @@ describe("AgentRegistry", () => {
 
   it("includes custom agents", () => {
     const registry = new AgentRegistry([
-      { name: "my-agent", domain: "custom", tier: "opus" },
+      { name: "my-agent", domain: "custom", tier: "high" },
     ]);
     expect(registry.count().custom).toBe(1);
     expect(registry.count().total).toBe(33);
@@ -32,11 +32,11 @@ describe("AgentRegistry", () => {
 
   it("custom agent overrides built-in with same name", () => {
     const registry = new AgentRegistry([
-      { name: "executor", domain: "custom-execution", tier: "opus" },
+      { name: "executor", domain: "custom-execution", tier: "high" },
     ]);
     const agent = registry.get("executor");
     expect(agent!.domain).toBe("custom-execution");
-    expect(agent!.tier).toBe("opus");
+    expect(agent!.tier).toBe("high");
   });
 
   it("lists agents by domain", () => {
@@ -47,8 +47,8 @@ describe("AgentRegistry", () => {
 
   it("lists agents by tier", () => {
     const registry = new AgentRegistry();
-    const opusAgents = registry.listByTier("opus");
-    expect(opusAgents.length).toBeGreaterThan(5);
+    const highAgents = registry.listByTier("high");
+    expect(highAgents.length).toBeGreaterThan(5);
   });
 
   it("lists unique domains", () => {

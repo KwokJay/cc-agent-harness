@@ -36,9 +36,9 @@ export async function validateSkill(skillDir: string): Promise<SkillValidationRe
   if (!name) errors.push("Frontmatter missing required 'name' field");
   if (!description) errors.push("Frontmatter missing required 'description' field");
 
-  const agentsYaml = join(skillDir, "agents", "openai.yaml");
-  if (!existsSync(agentsYaml)) {
-    warnings.push("No agents/openai.yaml (recommended for UI metadata)");
+  const metadataYaml = join(skillDir, "metadata.yaml");
+  if (!existsSync(metadataYaml)) {
+    warnings.push("No metadata.yaml (recommended for skill metadata)");
   }
 
   return { valid: errors.length === 0, name, description, errors, warnings };

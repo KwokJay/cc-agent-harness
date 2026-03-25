@@ -1,6 +1,7 @@
 import { discoverSkills } from "../skill/manager.js";
 import { AgentRegistry } from "../agent/registry.js";
 import { loadConfig, configExists } from "../config/loader.js";
+import type { AgentDefinition } from "../config/schema.js";
 
 export async function runList(resource: string): Promise<void> {
   const cwd = process.cwd();
@@ -26,7 +27,11 @@ export async function runList(resource: string): Promise<void> {
 }
 
 async function listSkills(cwd: string): Promise<void> {
-  const dirs = [".codex/skills", ".harness/skills"];
+  let dirs = [".harness/skills"];
+  if (configExists(cwd)) {
+    const config = await loadConfig({ cwd });
+    dirs = config.skills.directories;
+  }
   const skills = await discoverSkills(dirs, cwd);
 
   if (skills.length === 0) {
@@ -45,7 +50,7 @@ async function listSkills(cwd: string): Promise<void> {
 }
 
 async function listAgents(cwd: string): Promise<void> {
-  let customDefs: { name: string; domain: string; tier: string }[] = [];
+  let customDefs: AgentDefinition[] = [];
   if (configExists(cwd)) {
     const config = await loadConfig({ cwd });
     customDefs = config.agents.definitions;
@@ -93,6 +98,5 @@ function listTemplates(): void {
   console.log("  standard  — Standard version with common rules");
   console.log("  full      — Complete version with orchestration rules");
   console.log("\nAvailable skill templates:\n");
-  console.log("  basic     — Basic skill (SKILL.md only)");
-  console.log("  scripted  — Skill with scripts and agents/openai.yaml");
+  console.log("  basic     — Basic skill (SKILL.md + metadata.yaml)");
 }

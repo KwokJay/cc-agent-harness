@@ -49,13 +49,13 @@ export async function runSetup(opts: SetupOptions): Promise<void> {
     agents: {
       delegation_first: true,
       model_routing: {
-        low: "haiku",
-        medium: "sonnet",
-        high: "opus",
+        low: "low",
+        medium: "medium",
+        high: "high",
       },
     },
     skills: {
-      directories: [".codex/skills", ".harness/skills"],
+      directories: [".harness/skills"],
       auto_detect: true,
     },
     workflows: {

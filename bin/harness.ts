@@ -38,11 +38,56 @@ program
   });
 
 program
+  .command("verify")
+  .description("Run verification checks (build, test, lint)")
+  .option("--fail-fast", "Stop on first failure")
+  .action(async (opts) => {
+    const { runVerify } = await import("../src/cli/verify.js");
+    await runVerify(opts);
+  });
+
+program
   .command("list <resource>")
   .description("List available resources (skills|agents|commands|templates)")
   .action(async (resource: string) => {
     const { runList } = await import("../src/cli/list.js");
     await runList(resource);
+  });
+
+const configCmd = program
+  .command("config")
+  .description("Configuration management");
+
+configCmd
+  .command("show")
+  .description("Display merged configuration")
+  .action(async () => {
+    const { runConfigShow } = await import("../src/cli/config.js");
+    await runConfigShow();
+  });
+
+configCmd
+  .command("validate")
+  .description("Validate configuration files")
+  .action(async () => {
+    const { runConfigValidate } = await import("../src/cli/config.js");
+    await runConfigValidate();
+  });
+
+program
+  .command("scaffold")
+  .description("Scaffold a new skill")
+  .argument("<type>", "Resource type to scaffold (skill)")
+  .argument("<name>", "Name of the resource")
+  .option("-d, --description <desc>", "Description of the resource")
+  .action(async (type: string, name: string, opts) => {
+    if (type !== "skill") {
+      console.error(`Unknown scaffold type: ${type}. Available: skill`);
+      process.exitCode = 1;
+      return;
+    }
+    const { runScaffoldSkill } = await import("../src/cli/scaffold.js");
+    await runScaffoldSkill(name, opts);
   });
 
 program.parse();

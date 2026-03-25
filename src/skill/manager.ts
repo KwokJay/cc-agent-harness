@@ -45,7 +45,7 @@ export async function discoverSkills(
 
 export async function listSkillDirectories(cwd?: string): Promise<string[]> {
   const base = cwd ?? process.cwd();
-  const candidates = [".codex/skills", ".harness/skills"];
+  const candidates = [".harness/skills"];
   return candidates
     .map((d) => resolve(base, d))
     .filter((d) => existsSync(d));
