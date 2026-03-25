@@ -1,51 +1,68 @@
-# agent-harness
+<p align="center"><code>npm install -g agent-harness</code></p>
+<p align="center"><strong>agent-harness</strong> is a vendor-neutral CLI and TypeScript toolkit for AI-assisted development workflows.</p>
+<p align="center"><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a></p>
 
-Universal development pipeline harness — configuration, templates, skill management, and health checks for AI-assisted projects.
+It helps teams standardize project setup, `AGENTS.md` generation, skill discovery, health checks, and verification pipelines without locking into a single model vendor or agent framework.
 
-## What is it?
+---
 
-`agent-harness` provides a vendor-neutral foundation for AI agent-assisted development workflows:
+## Quickstart
 
-- **Configuration management** — layered YAML config with Zod validation
-- **Agent registry** — define and route agents by domain and capability tier
-- **Skill management** — discover, validate, and scaffold reusable skills
-- **Health checks** — verify project setup, tools, and configuration
-- **Template engine** — generate `AGENTS.md` and project files from templates
-- **Verification pipeline** — run build/test/lint checks from config
-- **Project adapters** — language-specific commands and checks for TypeScript, Python, Rust
+### Install and run
 
-## Quick Start
+Install globally with npm:
 
-```bash
-# Install
+```shell
 npm install -g agent-harness
+```
 
-# Initialize in your project
+Then initialize a project:
+
+```shell
 agent-harness setup
-
-# Check project health
 agent-harness doctor
-
-# Run verification checks
 agent-harness verify
 ```
 
-## CLI Commands
+### Develop from source
+
+This repository targets `Node >=22` and uses `pnpm` for local development.
+
+```shell
+pnpm install
+pnpm build
+pnpm test
+pnpm lint
+```
+
+## What It Does
+
+- Generates a consistent `.harness/` project scaffold and `AGENTS.md` from templates.
+- Loads layered YAML configuration and validates it with Zod.
+- Routes agent/model tiers through vendor-neutral `low` / `medium` / `high` mappings.
+- Discovers, validates, and scaffolds reusable project skills.
+- Detects project type and resolves verification commands for TypeScript, Python, and Rust.
+- Runs project health checks plus configurable verification pipelines like build, test, and lint.
+- Exposes the same primitives as a TypeScript library for deeper integration.
+
+## Common Commands
 
 | Command | Description |
 |---------|-------------|
-| `agent-harness setup` | Initialize `.harness/` directory and `AGENTS.md` |
+| `agent-harness setup` | Initialize `.harness/` and generate `AGENTS.md` |
 | `agent-harness update` | Sync templates and configuration |
-| `agent-harness doctor` | Run health checks on the project |
-| `agent-harness verify` | Execute verification checks (build, test, lint) |
-| `agent-harness list <resource>` | List skills, agents, commands, or templates |
-| `agent-harness scaffold skill <name>` | Create a new skill from template |
-| `agent-harness config show` | Display merged configuration |
-| `agent-harness config validate` | Validate configuration files |
+| `agent-harness doctor` | Run health checks for the current project |
+| `agent-harness verify` | Execute the configured verification pipeline |
+| `agent-harness run <task>` | Run a named workflow or adapter command |
+| `agent-harness list <resource>` | List `skills`, `agents`, `commands`, or `templates` |
+| `agent-harness config show` | Print merged configuration |
+| `agent-harness config validate` | Validate config files |
+| `agent-harness schema generate` | Generate JSON Schema for the config |
+| `agent-harness scaffold skill <name>` | Create a new skill scaffold |
 
 ## Configuration
 
-Configuration lives in `.harness/harness.config.yaml` with optional user-level overrides at `~/.harness/config.yaml`.
+Project config lives at `.harness/harness.config.yaml`. Optional user-level defaults can live at `~/.harness/config.yaml`.
 
 ```yaml
 project:
@@ -62,7 +79,7 @@ agents:
   providers:
     low: "gpt-4o-mini"
     medium: "claude-sonnet-4-20250514"
-    high: "claude-opus-4-20250514"
+    high: "o3"
   definitions: []
 
 skills:
@@ -86,7 +103,7 @@ templates:
 
 ### Model Tiers
 
-Agent tiers use generic levels (`low`, `medium`, `high`) instead of vendor-specific model names. Map tiers to actual models via the `providers` field:
+`agent-harness` keeps model routing vendor-neutral. Agents and workflows use `low`, `medium`, and `high`, while `providers` maps those tiers to concrete model IDs.
 
 ```yaml
 agents:
@@ -109,38 +126,31 @@ import {
   render,
 } from "agent-harness";
 
-// Load and validate config
 const config = await loadConfig();
-
-// Query agents
 const registry = new AgentRegistry(config.agents.definitions);
 const agent = registry.get("executor");
-const executors = registry.listByDomain("execution");
-
-// Route model tier based on task
-const complexity = inferComplexity("refactor the auth module");
-const tier = routeModel(complexity, config.agents.model_routing);
-
-// Discover skills
+const tier = routeModel(
+  inferComplexity("refactor the auth module"),
+  config.agents.model_routing,
+);
 const skills = await discoverSkills(config.skills.directories);
-
-// Render templates
+const report = await runHealthChecks([]);
 const output = render("Hello {{name}}", { name: "World" });
 ```
 
-## Project Adapters
+## Built-in Adapters
 
-Built-in adapters detect project type and provide language-specific commands and health checks:
+Built-in adapters detect the current project and provide default commands and checks.
 
-| Adapter | Detection | Commands |
-|---------|-----------|----------|
-| TypeScript | `tsconfig.json` or `package.json` | build, test, lint |
-| Python | `pyproject.toml`, `setup.py`, or `requirements.txt` | test, lint, fmt |
-| Rust | `Cargo.toml` | fmt, test, clippy, build |
+| Adapter | Detection | Typical commands |
+|---------|-----------|------------------|
+| TypeScript | `tsconfig.json` or `package.json` | `build`, `test`, `lint` |
+| Python | `pyproject.toml`, `setup.py`, or `requirements.txt` | `test`, `lint`, `fmt` |
+| Rust | `Cargo.toml` | `fmt`, `test`, `clippy`, `build` |
 
 ## Skills
 
-Skills are directories containing a `SKILL.md` with YAML frontmatter:
+Skills are directories containing a `SKILL.md` file with YAML frontmatter.
 
 ```markdown
 ---
@@ -153,33 +163,48 @@ description: What this skill does
 Usage instructions here.
 ```
 
-Scaffold a new skill:
+Create one with:
 
-```bash
+```shell
 agent-harness scaffold skill my-skill -d "Description of the skill"
 ```
 
 ## Architecture
 
-```
+Generated project structure:
+
+```text
 .harness/
-  harness.config.yaml    # Project configuration
-  skills/                # Local skills directory
-AGENTS.md                # Generated agent instructions
+  harness.config.yaml
+  skills/
+AGENTS.md
 ```
 
-The framework is structured as:
+Core source layout:
 
-```
+```text
 src/
-  config/     — Schema, defaults, config loading
-  agent/      — Registry, model routing
-  adapter/    — Project type detection, language adapters
-  skill/      — Discovery, validation, scaffolding
-  health/     — Health check framework and built-in checks
-  template/   — Template engine and file renderer
-  cli/        — CLI command implementations
+  config/        Schema, defaults, layered config loading
+  agent/         Agent registry and model tier routing
+  adapter/       Project type detection and language adapters
+  skill/         Skill discovery, validation, scaffolding
+  health/        Health checks and reporting
+  template/      Template rendering and file generation
+  hook/          Lifecycle hook discovery and dispatch
+  feature/       Feature registry
+  plugin/        Plugin interface and registry
+  context/       Context assembly pipeline
+  audit/         Append-only audit logging
+  cli/           Command implementations
 ```
+
+## Docs
+
+- [`docs/getting-started.md`](./docs/getting-started.md)
+- [`docs/architecture.md`](./docs/architecture.md)
+- [`docs/config-reference.md`](./docs/config-reference.md)
+- [`docs/adapter-guide.md`](./docs/adapter-guide.md)
+- [`docs/plugin-guide.md`](./docs/plugin-guide.md)
 
 ## License
 
