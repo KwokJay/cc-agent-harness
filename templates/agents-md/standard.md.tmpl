@@ -1,0 +1,41 @@
+# {{projectName}}
+
+## Project Info
+
+- **Language**: {{language}}
+
+## Coding Guidelines
+
+- Follow established project conventions and style guides.
+- Write clear, self-documenting code with minimal comments.
+- Prefer editing existing files over creating new ones.
+- Run tests after making changes to verify correctness.
+- Run linters/formatters before finalizing changes.
+
+## Agent Delegation
+
+Prefer delegating substantive work to specialized agents:
+
+| Task Type | Recommended Agent | Model Tier |
+|-----------|-------------------|------------|
+| Quick lookup | explore | low |
+| Feature implementation | executor | medium |
+| Complex debugging | architect | high |
+| UI/frontend work | designer | medium |
+| Documentation | writer | low |
+| Code review | code-reviewer | high |
+
+## Verification Protocol
+
+Before claiming any task is complete:
+
+1. Run the build to check for compilation errors.
+2. Run relevant tests to verify correctness.
+3. Run linter to check for style issues.
+
+## Skills
+
+Skills are discovered from these directories:
+
+- `.codex/skills/`
+- `.harness/skills/`

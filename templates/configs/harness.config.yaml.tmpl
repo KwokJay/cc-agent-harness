@@ -1,0 +1,28 @@
+project:
+  name: "{{projectName}}"
+  language: "{{language}}"
+  description: ""
+
+agents:
+  delegation_first: true
+  model_routing:
+    low: "haiku"
+    medium: "sonnet"
+    high: "opus"
+
+skills:
+  directories:
+    - ".codex/skills"
+    - ".harness/skills"
+  auto_detect: true
+
+workflows:
+  verification:
+    checks:
+      - build
+      - test
+      - lint
+
+templates:
+  agents_md:
+    variant: "{{variant}}"

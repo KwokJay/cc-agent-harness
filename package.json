@@ -1,0 +1,41 @@
+{
+  "name": "agent-harness",
+  "version": "0.1.0",
+  "description": "Universal development pipeline harness — configuration, templates, skill management, and health checks for AI-assisted projects.",
+  "type": "module",
+  "bin": {
+    "agent-harness": "./dist/bin/harness.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.1.0",
+    "@types/node": "^22.15.0"
+  }
+}
