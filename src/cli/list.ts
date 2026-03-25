@@ -1,34 +1,37 @@
 import { discoverSkills } from "../skill/manager.js";
 import { AgentRegistry } from "../agent/registry.js";
-import { loadConfig, configExists } from "../config/loader.js";
+import { loadConfig, projectConfigExists } from "../config/loader.js";
 import type { AgentDefinition } from "../config/schema.js";
+import { HarnessRuntime } from "../runtime/harness.js";
 
 export async function runList(resource: string): Promise<void> {
-  const cwd = process.cwd();
-
   switch (resource) {
     case "skills":
-      await listSkills(cwd);
+      await listSkills();
       break;
     case "agents":
-      await listAgents(cwd);
+      await listAgents();
       break;
     case "commands":
-      await listCommands(cwd);
+      await listCommands();
       break;
     case "templates":
       listTemplates();
       break;
+    case "features":
+      await listFeatures();
+      break;
     default:
       console.error(`Unknown resource: ${resource}`);
-      console.error("Available: skills, agents, commands, templates");
+      console.error("Available: skills, agents, commands, templates, features");
       process.exitCode = 1;
   }
 }
 
-async function listSkills(cwd: string): Promise<void> {
+async function listSkills(): Promise<void> {
+  const cwd = process.cwd();
   let dirs = [".harness/skills"];
-  if (configExists(cwd)) {
+  if (projectConfigExists(cwd)) {
     const config = await loadConfig({ cwd });
     dirs = config.skills.directories;
   }
@@ -49,9 +52,10 @@ async function listSkills(cwd: string): Promise<void> {
   }
 }
 
-async function listAgents(cwd: string): Promise<void> {
+async function listAgents(): Promise<void> {
+  const cwd = process.cwd();
   let customDefs: AgentDefinition[] = [];
-  if (configExists(cwd)) {
+  if (projectConfigExists(cwd)) {
     const config = await loadConfig({ cwd });
     customDefs = config.agents.definitions;
   }
@@ -71,24 +75,44 @@ async function listAgents(cwd: string): Promise<void> {
   }
 }
 
-async function listCommands(cwd: string): Promise<void> {
-  if (!configExists(cwd)) {
+async function listCommands(): Promise<void> {
+  const runtime = await HarnessRuntime.create({ requireProjectConfig: true });
+  const tasks = runtime.listTasks();
+
+  if (tasks.length === 0) {
+    console.log("No commands registered.");
+    return;
+  }
+
+  console.log(`Commands (${tasks.length}):\n`);
+  for (const task of tasks) {
+    const suffix = task.adapterName ? ` via ${task.adapterName}` : "";
+    console.log(`  ${task.name}: ${task.command} [${task.source}${suffix}]`);
+  }
+}
+
+async function listFeatures(): Promise<void> {
+  const runtime = await HarnessRuntime.create();
+
+  if (!runtime.hasAnyConfig) {
     console.log("No harness configuration found. Run `agent-harness setup` first.");
     return;
   }
 
-  const config = await loadConfig({ cwd });
-  const commands = config.workflows.commands;
-  const entries = Object.entries(commands);
-
-  if (entries.length === 0) {
-    console.log("No custom commands registered.");
+  const features = runtime.listFeatureStates();
+  if (features.length === 0) {
+    console.log("No feature flags registered.");
     return;
   }
 
-  console.log(`Commands (${entries.length}):\n`);
-  for (const [name, cmd] of entries) {
-    console.log(`  ${name}: ${cmd}`);
+  console.log(`Features (${features.length}):\n`);
+  for (const feature of features) {
+    const configured = feature.configured
+      ? ` configured=${String(feature.configuredValue)}`
+      : "";
+    console.log(
+      `  ${feature.spec.key}: ${feature.enabled ? "enabled" : "disabled"} (${feature.spec.stage})${configured}`,
+    );
   }
 }
 

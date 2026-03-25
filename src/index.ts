@@ -3,6 +3,9 @@ export {
   loadConfig,
   loadConfigWithLayers,
   configExists,
+  projectConfigExists,
+  userConfigExists,
+  anyConfigExists,
   type HarnessConfig,
   type ConfigLayer,
   type LoadConfigOptions,
@@ -72,3 +75,14 @@ export {
   type HookResult,
   type HooksConfig,
 } from "./hook/index.js";
+
+// Runtime
+export {
+  HarnessRuntime,
+  type RuntimeTask,
+  type RuntimeTaskSource,
+  type RuntimeFeatureState,
+  type CreateHarnessRuntimeOptions,
+  type BuildContextOptions,
+  type WriteContextOptions,
+} from "./runtime/harness.js";

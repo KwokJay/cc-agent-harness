@@ -1,9 +1,11 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { resolve, join } from "node:path";
-import { loadConfig, configExists } from "../config/loader.js";
+import { projectConfigExists } from "../config/loader.js";
+import type { HarnessConfig } from "../config/loader.js";
 import { render } from "../template/engine.js";
 import { getTemplatesDir } from "./utils.js";
+import { HarnessRuntime } from "../runtime/harness.js";
 
 export interface UpdateOptions {
   check?: boolean;
@@ -17,24 +19,45 @@ export async function runUpdate(opts: UpdateOptions): Promise<void> {
   console.log(`Agent Harness Update${dryRun ? " (dry-run)" : ""}`);
   console.log("====================\n");
 
-  if (!configExists(cwd)) {
+  if (!projectConfigExists(cwd)) {
     console.log("  No harness configuration found. Run `agent-harness setup` first.");
     return;
   }
 
-  const config = await loadConfig({ cwd });
+  const runtime = await HarnessRuntime.create({ requireProjectConfig: true });
+  const config = runtime.config;
   const templatesDir = getTemplatesDir();
+
+  if (!config) {
+    throw new Error("Runtime expected configuration but none was loaded.");
+  }
+
+  await runtime.dispatchHooks("update.pre", {
+    command: "update",
+    dryRun,
+    template: opts.template ?? null,
+  });
 
   if (!opts.template || opts.template === "agents-md") {
     await updateAgentsMd(cwd, config, templatesDir, dryRun);
   }
+
+  await runtime.dispatchHooks("update.post", {
+    command: "update",
+    dryRun,
+    template: opts.template ?? null,
+  });
+  await runtime.log("update", dryRun ? "Update dry-run completed" : "Update completed", {
+    dryRun,
+    template: opts.template ?? null,
+  });
 
   console.log(dryRun ? "\nDry-run complete. No files modified." : "\nUpdate complete.");
 }
 
 async function updateAgentsMd(
   cwd: string,
-  config: Awaited<ReturnType<typeof loadConfig>>,
+  config: HarnessConfig,
   templatesDir: string,
   dryRun: boolean,
 ): Promise<void> {

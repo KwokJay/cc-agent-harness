@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
-import { loadConfig, configExists } from "../config/loader.js";
+import { loadConfig, projectConfigExists } from "../config/loader.js";
 import { scaffoldSkill } from "../skill/scaffold.js";
+import { HarnessRuntime } from "../runtime/harness.js";
 
 export interface ScaffoldSkillOptions {
   description?: string;
@@ -11,9 +12,16 @@ export async function runScaffoldSkill(
   opts: ScaffoldSkillOptions,
 ): Promise<void> {
   const cwd = process.cwd();
+  const runtime = await HarnessRuntime.create();
+
+  await runtime.dispatchHooks("scaffold.pre", {
+    command: "scaffold",
+    type: "skill",
+    name,
+  });
 
   let targetDir = resolve(cwd, ".harness/skills");
-  if (configExists(cwd)) {
+  if (projectConfigExists(cwd)) {
     const config = await loadConfig({ cwd });
     const dirs = config.skills.directories;
     if (dirs.length > 0) {
@@ -31,6 +39,17 @@ export async function runScaffoldSkill(
     name,
     description,
     displayName,
+  });
+
+  await runtime.dispatchHooks("scaffold.post", {
+    command: "scaffold",
+    type: "skill",
+    name,
+    skillDir,
+  });
+  await runtime.log("scaffold", `Skill "${name}" scaffolded`, {
+    name,
+    skillDir,
   });
 
   console.log(`Skill scaffolded at ${skillDir}`);

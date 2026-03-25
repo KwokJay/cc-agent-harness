@@ -1,0 +1,33 @@
+project:
+  name: basic-fixture
+  language: typescript
+  description: "Fixture project for integration tests"
+
+agents:
+  delegation_first: true
+  definitions:
+    - name: fixture-agent
+      domain: fixtures
+      tier: medium
+      description: Fixture-only agent
+
+skills:
+  directories:
+    - .harness/skills
+  auto_detect: true
+
+workflows:
+  commands:
+    coverage: 'node -e "process.exit(0)"'
+  verification:
+    checks: ["build", "test", "lint", "coverage"]
+    fail_fast: true
+
+templates:
+  agents_md:
+    variant: standard
+    custom_rules:
+      - Always explain trade-offs
+
+features:
+  preview_context: true

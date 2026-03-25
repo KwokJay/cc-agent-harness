@@ -32,15 +32,17 @@ program
 program
   .command("doctor")
   .description("Run health checks on the current project")
-  .action(async () => {
+  .option("--json", "Output machine-readable JSON")
+  .action(async (opts) => {
     const { runDoctor } = await import("../src/cli/doctor.js");
-    await runDoctor();
+    await runDoctor(opts);
   });
 
 program
   .command("verify")
   .description("Run verification checks (build, test, lint)")
   .option("--fail-fast", "Stop on first failure")
+  .option("--json", "Output machine-readable JSON")
   .action(async (opts) => {
     const { runVerify } = await import("../src/cli/verify.js");
     await runVerify(opts);
@@ -48,7 +50,7 @@ program
 
 program
   .command("list <resource>")
-  .description("List available resources (skills|agents|commands|templates)")
+  .description("List available resources (skills|agents|commands|templates|features)")
   .action(async (resource: string) => {
     const { runList } = await import("../src/cli/list.js");
     await runList(resource);
@@ -93,6 +95,22 @@ schemaCmd
   .action(async (opts) => {
     const { runSchemaGenerate } = await import("../src/cli/schema.js");
     await runSchemaGenerate(opts);
+  });
+
+const contextCmd = program
+  .command("context")
+  .description("Context assembly and export");
+
+contextCmd
+  .command("build")
+  .description("Build assembled agent context")
+  .option("-f, --format <style>", "Tag style (markdown|xml|none)", "markdown")
+  .option("-o, --output <path>", "Write context to a file instead of stdout")
+  .option("--no-include-skills", "Skip skills summary")
+  .option("--no-include-rules", "Skip custom rules")
+  .action(async (opts) => {
+    const { runContextBuild } = await import("../src/cli/context.js");
+    await runContextBuild(opts);
   });
 
 program

@@ -102,8 +102,18 @@ export async function loadConfigWithLayers(opts?: LoadConfigOptions): Promise<Lo
 }
 
 export function configExists(cwd?: string): boolean {
+  return anyConfigExists(cwd);
+}
+
+export function projectConfigExists(cwd?: string): boolean {
   const dir = cwd ?? process.cwd();
-  const projectExists = existsSync(resolve(dir, PROJECT_CONFIG_PATH));
-  const userExists = existsSync(join(homedir(), USER_CONFIG_PATH));
-  return projectExists || userExists;
+  return existsSync(resolve(dir, PROJECT_CONFIG_PATH));
+}
+
+export function userConfigExists(): boolean {
+  return existsSync(join(homedir(), USER_CONFIG_PATH));
+}
+
+export function anyConfigExists(cwd?: string): boolean {
+  return projectConfigExists(cwd) || userConfigExists();
 }

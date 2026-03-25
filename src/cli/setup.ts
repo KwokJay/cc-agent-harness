@@ -1,10 +1,11 @@
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { resolve, join, basename } from "node:path";
 import { stringify as yamlStringify } from "yaml";
 import { detectLanguage } from "../adapter/detector.js";
 import { render } from "../template/engine.js";
 import { getTemplatesDir } from "./utils.js";
+import { HarnessRuntime } from "../runtime/harness.js";
 
 export interface SetupOptions {
   language?: string;
@@ -14,12 +15,19 @@ export interface SetupOptions {
 export async function runSetup(opts: SetupOptions): Promise<void> {
   const cwd = process.cwd();
   const harnessDir = resolve(cwd, ".harness");
+  const preRuntime = await HarnessRuntime.create();
 
   console.log("Agent Harness Setup");
   console.log("===================\n");
 
   const language = opts.language ?? detectLanguage(cwd);
   const variant = opts.template ?? "standard";
+
+  await preRuntime.dispatchHooks("setup.pre", {
+    command: "setup",
+    language,
+    template: variant,
+  });
 
   console.log(`  Detected language: ${language}`);
   console.log(`  Template variant:  ${variant}\n`);
@@ -38,7 +46,7 @@ export async function runSetup(opts: SetupOptions): Promise<void> {
   }
 
   const configPath = resolve(harnessDir, "harness.config.yaml");
-  const projectName = cwd.split("/").pop() ?? "my-project";
+  const projectName = basename(cwd) || "my-project";
 
   const config = {
     project: {
@@ -94,6 +102,17 @@ export async function runSetup(opts: SetupOptions): Promise<void> {
   } else {
     console.log("  AGENTS.md already exists — skipping (use `agent-harness update` to refresh).");
   }
+
+  const postRuntime = await HarnessRuntime.create();
+  await postRuntime.dispatchHooks("setup.post", {
+    command: "setup",
+    language,
+    template: variant,
+  });
+  await postRuntime.log("setup", "Setup completed", {
+    language,
+    template: variant,
+  });
 
   console.log("\nSetup complete! Run `agent-harness doctor` to verify.");
 }

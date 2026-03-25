@@ -1,3 +1,6 @@
+import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { ContextPipeline } from "./pipeline.js";
 
@@ -86,5 +89,22 @@ describe("ContextPipeline", () => {
     const result = pipeline.build();
     expect(result.rendered).toContain("<!-- test -->");
     expect(result.rendered).toContain("<!-- /test -->");
+  });
+
+  it("collects hierarchical AGENTS.md files from root to nested cwd", async () => {
+    const root = await mkdtemp(join(tmpdir(), "context-pipeline-"));
+    const nested = join(root, "apps", "web");
+    await mkdir(nested, { recursive: true });
+    await writeFile(join(root, "AGENTS.md"), "# Root Rules\n", "utf-8");
+    await writeFile(join(root, "apps", "AGENTS.md"), "# Apps Rules\n", "utf-8");
+    await writeFile(join(nested, "AGENTS.md"), "# Web Rules\n", "utf-8");
+
+    const pipeline = new ContextPipeline();
+    await pipeline.addHierarchicalDocs(nested, root);
+
+    const result = pipeline.build({ tagStyle: "none" });
+    expect(result.rendered).toContain("# Root Rules");
+    expect(result.rendered).toContain("# Apps Rules");
+    expect(result.rendered).toContain("# Web Rules");
   });
 });

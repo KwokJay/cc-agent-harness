@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { resolve, dirname, parse as parsePath } from "node:path";
+import { resolve, dirname, relative, sep } from "node:path";
 import type { HarnessConfig } from "../config/schema.js";
 import { discoverSkills } from "../skill/manager.js";
 import type { ContextBlock, ContextPipelineResult, ContextBuildOptions, TagStyle } from "./types.js";
@@ -98,29 +98,25 @@ function collectAgentsMdFiles(root: string, cwd: string): string[] {
   const files: string[] = [];
   let current = resolve(root);
   const target = resolve(cwd);
+  const steps = relative(current, target)
+    .split(sep)
+    .filter(Boolean);
 
-  while (true) {
-    const agentsMd = resolve(current, "AGENTS.md");
+  const collect = (dir: string): void => {
+    const agentsMd = resolve(dir, "AGENTS.md");
     if (existsSync(agentsMd)) {
       files.push(agentsMd);
     }
-    if (current === target) break;
+  };
 
-    const next = resolve(current, relativeStep(current, target));
-    if (next === current) break;
-    current = next;
+  collect(current);
+  for (const step of steps) {
+    current = resolve(current, step);
+    if (!target.startsWith(current)) break;
+    collect(current);
   }
 
   return files;
-}
-
-function relativeStep(from: string, to: string): string {
-  const fromParts = from.split("/").filter(Boolean);
-  const toParts = to.split("/").filter(Boolean);
-  if (toParts.length > fromParts.length) {
-    return toParts[fromParts.length];
-  }
-  return "";
 }
 
 async function findProjectRoot(cwd: string): Promise<string> {

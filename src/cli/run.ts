@@ -1,55 +1,37 @@
 import { execSync } from "node:child_process";
-import { loadConfig, configExists } from "../config/loader.js";
-import { detectProjectType } from "../adapter/detector.js";
+import { HarnessRuntime } from "../runtime/harness.js";
 
 export async function runTask(taskName: string): Promise<void> {
-  const cwd = process.cwd();
+  const runtime = await HarnessRuntime.create({ requireProjectConfig: true });
+  const task = runtime.getTask(taskName);
 
-  if (!configExists(cwd)) {
-    console.log("No harness configuration found. Run `agent-harness setup` first.");
-    process.exitCode = 1;
-    return;
-  }
-
-  const config = await loadConfig({ cwd });
-  const commandMap = await resolveAllCommands(cwd, config);
-
-  const command = commandMap.get(taskName);
-  if (!command) {
+  if (!task) {
     console.error(`Unknown task: "${taskName}"`);
     console.error("\nAvailable tasks:");
-    for (const [name, cmd] of commandMap) {
-      console.error(`  ${name}: ${cmd}`);
+    for (const availableTask of runtime.listTasks()) {
+      console.error(
+        `  ${availableTask.name}: ${availableTask.command} [${availableTask.source}]`,
+      );
     }
     process.exitCode = 1;
     return;
   }
 
-  console.log(`Running "${taskName}": ${command}\n`);
+  console.log(`Running "${task.name}": ${task.command}\n`);
 
   try {
-    execSync(command, { cwd, stdio: "inherit", timeout: 300_000 });
+    execSync(task.command, { cwd: runtime.cwd, stdio: "inherit", timeout: 300_000 });
+    await runtime.log("verify", `Task "${task.name}" passed`, {
+      task: task.name,
+      command: task.command,
+      source: task.source,
+    });
   } catch {
+    await runtime.log("verify", `Task "${task.name}" failed`, {
+      task: task.name,
+      command: task.command,
+      source: task.source,
+    });
     process.exitCode = 1;
   }
-}
-
-async function resolveAllCommands(
-  cwd: string,
-  config: Awaited<ReturnType<typeof loadConfig>>,
-): Promise<Map<string, string>> {
-  const map = new Map<string, string>();
-
-  const adapter = await detectProjectType(cwd);
-  if (adapter) {
-    for (const cmd of adapter.getCommands()) {
-      map.set(cmd.name, cmd.command);
-    }
-  }
-
-  for (const [name, cmd] of Object.entries(config.workflows.commands)) {
-    map.set(name, cmd);
-  }
-
-  return map;
 }

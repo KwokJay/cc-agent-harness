@@ -1,0 +1,3 @@
+hooks:
+  - event: verify.post
+    command: "node -e \"console.log('verify-hook')\""
