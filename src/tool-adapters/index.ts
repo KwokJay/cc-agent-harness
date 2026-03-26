@@ -1,0 +1,27 @@
+import type { ToolAdapter, ToolId } from "./types.js";
+import { CursorAdapter } from "./cursor.js";
+import { ClaudeCodeAdapter } from "./claude-code.js";
+import { CopilotAdapter } from "./copilot.js";
+import { CodexAdapter } from "./codex.js";
+import { OpenCodeAdapter } from "./opencode.js";
+
+export type { ToolAdapter, ToolId, ToolAdapterContext, GeneratedFile } from "./types.js";
+export { ALL_TOOL_IDS } from "./types.js";
+
+const ALL_ADAPTERS: ToolAdapter[] = [
+  new CursorAdapter(),
+  new ClaudeCodeAdapter(),
+  new CopilotAdapter(),
+  new CodexAdapter(),
+  new OpenCodeAdapter(),
+];
+
+export function getToolAdapter(id: ToolId): ToolAdapter {
+  const adapter = ALL_ADAPTERS.find((a) => a.id === id);
+  if (!adapter) throw new Error(`Unknown tool: ${id}`);
+  return adapter;
+}
+
+export function listToolAdapters(): ToolAdapter[] {
+  return [...ALL_ADAPTERS];
+}

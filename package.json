@@ -1,7 +1,7 @@
 {
   "name": "cc-agent-harness",
-  "version": "0.0.1",
-  "description": "Universal development pipeline harness — configuration, templates, skill management, and health checks for AI-assisted projects.",
+  "version": "0.1.0",
+  "description": "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -15,14 +15,19 @@
   "keywords": [
     "agent",
     "harness",
+    "scaffold",
     "cli",
     "ai",
-    "workflow",
+    "cursor",
+    "claude-code",
+    "copilot",
+    "codex",
+    "opencode",
     "context-engineering",
     "developer-tools"
   ],
   "bin": {
-    "agent-harness": "./dist/bin/harness.js"
+    "agent-harness": "./dist/harness.js"
   },
   "exports": {
     ".": {
@@ -31,8 +36,7 @@
     }
   },
   "files": [
-    "dist",
-    "templates"
+    "dist"
   ],
   "scripts": {
     "build": "tsup",
@@ -48,9 +52,7 @@
   },
   "dependencies": {
     "commander": "^13.1.0",
-    "yaml": "^2.7.0",
-    "zod": "^3.24.2",
-    "zod-to-json-schema": "^3.25.1"
+    "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

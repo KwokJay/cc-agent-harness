@@ -2,20 +2,11 @@ export interface TemplateContext {
   [key: string]: string | boolean | string[] | undefined;
 }
 
-/**
- * Lightweight template engine:
- * - {{variable}} — interpolation
- * - {{#if condition}}...{{/if}} — conditional block (truthy check)
- * - {{#if condition}}...{{#else}}...{{/if}} — conditional with else
- * - {{#each items}}...{{/each}} — array iteration (current item as {{.}})
- */
 export function render(template: string, context: TemplateContext): string {
   let result = template;
-
   result = processEach(result, context);
   result = processConditionals(result, context);
   result = interpolateVariables(result, context);
-
   return result;
 }
 
@@ -37,12 +28,10 @@ function processConditionals(template: string, context: TemplateContext): string
       return isTruthy(context[key]) ? ifBody : elseBody;
     },
   );
-
   const ifRegex = /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g;
   result = result.replace(ifRegex, (_match, key: string, body: string) => {
     return isTruthy(context[key]) ? body : "";
   });
-
   return result;
 }
 

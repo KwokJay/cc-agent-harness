@@ -5,33 +5,25 @@ const program = new Command();
 program
   .name("agent-harness")
   .description(
-    "Universal development pipeline harness — config, templates, skills, and health checks for AI-assisted projects.",
+    "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   )
-  .version("0.0.1");
+  .version("0.1.0");
 
 program
-  .command("setup")
-  .description("Initialize harness in the current project")
-  .option("-l, --language <lang>", "Project language (rust|typescript|python|multi)")
-  .option("-t, --template <variant>", "AGENTS.md template variant (minimal|standard|full)", "standard")
+  .command("init")
+  .description("Initialize harness for the current project")
+  .option("-p, --project <type>", "Project type (frontend|backend|fullstack|monorepo|docs)")
+  .option("-t, --tools <tools>", "AI tools, comma-separated (cursor,claude-code,copilot,codex,opencode)", "cursor,claude-code")
+  .option("-n, --name <name>", "Project name (defaults to directory name)")
+  .option("--overwrite", "Overwrite existing files")
   .action(async (opts) => {
-    const { runSetup } = await import("../src/cli/setup.js");
-    await runSetup(opts);
-  });
-
-program
-  .command("update")
-  .description("Sync/upgrade templates and configuration")
-  .option("--check", "Dry-run: show what would change without modifying files")
-  .option("--template <name>", "Only update a specific template (e.g. agents-md)")
-  .action(async (opts) => {
-    const { runUpdate } = await import("../src/cli/update.js");
-    await runUpdate(opts);
+    const { runInit } = await import("../src/cli/init.js");
+    await runInit(opts);
   });
 
 program
   .command("doctor")
-  .description("Run health checks on the current project")
+  .description("Check health of the harness setup")
   .option("--json", "Output machine-readable JSON")
   .action(async (opts) => {
     const { runDoctor } = await import("../src/cli/doctor.js");
@@ -39,94 +31,40 @@ program
   });
 
 program
-  .command("verify")
-  .description("Run verification checks (build, test, lint)")
-  .option("--fail-fast", "Stop on first failure")
-  .option("--json", "Output machine-readable JSON")
+  .command("update")
+  .description("Refresh generated harness files from current config")
+  .option("--overwrite", "Force overwrite all files")
   .action(async (opts) => {
-    const { runVerify } = await import("../src/cli/verify.js");
-    await runVerify(opts);
+    const { runUpdate } = await import("../src/cli/update.js");
+    await runUpdate(opts);
   });
 
 program
   .command("list <resource>")
-  .description("List available resources (skills|agents|commands|templates|features)")
+  .description("List supported resources (tools|projects)")
   .action(async (resource: string) => {
-    const { runList } = await import("../src/cli/list.js");
-    await runList(resource);
-  });
-
-const configCmd = program
-  .command("config")
-  .description("Configuration management");
-
-configCmd
-  .command("show")
-  .description("Display merged configuration")
-  .action(async () => {
-    const { runConfigShow } = await import("../src/cli/config.js");
-    await runConfigShow();
-  });
-
-configCmd
-  .command("validate")
-  .description("Validate configuration files")
-  .action(async () => {
-    const { runConfigValidate } = await import("../src/cli/config.js");
-    await runConfigValidate();
-  });
-
-program
-  .command("run <task>")
-  .description("Execute a named task from workflows.commands or adapter")
-  .action(async (task: string) => {
-    const { runTask } = await import("../src/cli/run.js");
-    await runTask(task);
-  });
-
-const schemaCmd = program
-  .command("schema")
-  .description("Schema management");
-
-schemaCmd
-  .command("generate")
-  .description("Generate JSON Schema from config definition")
-  .option("-o, --output <path>", "Output file path", ".harness/schema.json")
-  .action(async (opts) => {
-    const { runSchemaGenerate } = await import("../src/cli/schema.js");
-    await runSchemaGenerate(opts);
-  });
-
-const contextCmd = program
-  .command("context")
-  .description("Context assembly and export");
-
-contextCmd
-  .command("build")
-  .description("Build assembled agent context")
-  .option("-f, --format <style>", "Tag style (markdown|xml|none)", "markdown")
-  .option("-o, --output <path>", "Write context to a file instead of stdout")
-  .option("--no-include-skills", "Skip skills summary")
-  .option("--no-include-rules", "Skip custom rules")
-  .action(async (opts) => {
-    const { runContextBuild } = await import("../src/cli/context.js");
-    await runContextBuild(opts);
-  });
-
-program
-  .command("scaffold")
-  .description("Scaffold a new skill")
-  .argument("<type>", "Resource type to scaffold (skill)")
-  .argument("<name>", "Name of the resource")
-  .option("-d, --description <desc>", "Description of the resource")
-  .action(async (type: string, name: string, opts) => {
-    if (type !== "skill") {
-      console.error(`Unknown scaffold type: ${type}. Available: skill`);
-      process.exitCode = 1;
-      return;
+    switch (resource) {
+      case "tools": {
+        const { listToolAdapters } = await import("../src/tool-adapters/index.js");
+        console.log("Supported AI tools:\n");
+        for (const adapter of listToolAdapters()) {
+          console.log(`  ${adapter.id.padEnd(14)} ${adapter.label}`);
+        }
+        break;
+      }
+      case "projects": {
+        const { ALL_PROJECT_TYPE_IDS } = await import("../src/project-types/index.js");
+        console.log("Supported project types:\n");
+        for (const id of ALL_PROJECT_TYPE_IDS) {
+          console.log(`  ${id}`);
+        }
+        break;
+      }
+      default:
+        console.error(`Unknown resource: ${resource}`);
+        console.error("Available: tools, projects");
+        process.exitCode = 1;
     }
-    const { runScaffoldSkill } = await import("../src/cli/scaffold.js");
-    await runScaffoldSkill(name, opts);
   });
 
 program.parse();
