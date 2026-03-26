@@ -1,14 +1,18 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile } from "./types.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
 
 export class CursorAdapter implements ToolAdapter {
   id = "cursor" as const;
   label = "Cursor";
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
-    return [
+    const files = [
       this.projectRule(ctx),
       this.codingRule(ctx),
     ];
+    for (const skill of ctx.skillContents) {
+      files.push(this.skillRule(skill));
+    }
+    return files;
   }
 
   private projectRule(ctx: ToolAdapterContext): GeneratedFile {
@@ -69,16 +73,29 @@ export class CursorAdapter implements ToolAdapter {
       lines.push(``);
       lines.push(`## Skill Packs`);
       lines.push(``);
-      lines.push(`Refer to \`.harness/skills/\` for project-specific conventions:`);
-      for (const skill of ctx.skills) {
-        lines.push(`- ${skill}`);
-      }
+      lines.push(`See .cursor/rules/skill-*.mdc for project-specific conventions.`);
     }
 
     return {
       path: ".cursor/rules/coding.mdc",
       content: lines.join("\n") + "\n",
       description: "Cursor coding conventions rule",
+    };
+  }
+
+  private skillRule(skill: SkillContent): GeneratedFile {
+    const lines = [
+      `---`,
+      `description: "Skill: ${skill.description}"`,
+      `alwaysApply: true`,
+      `---`,
+      ``,
+      skill.body,
+    ];
+    return {
+      path: `.cursor/rules/skill-${skill.name}.mdc`,
+      content: lines.join("\n") + "\n",
+      description: `Cursor skill rule: ${skill.name}`,
     };
   }
 }

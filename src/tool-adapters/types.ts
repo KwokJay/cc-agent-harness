@@ -8,6 +8,12 @@ export interface GeneratedFile {
   description: string;
 }
 
+export interface SkillContent {
+  name: string;
+  description: string;
+  body: string;
+}
+
 export interface ToolAdapterContext {
   projectName: string;
   project: DetectedProject;
@@ -16,6 +22,7 @@ export interface ToolAdapterContext {
   verificationChecks: string[];
   customRules: string[];
   skills: string[];
+  skillContents: SkillContent[];
 }
 
 export interface ToolAdapter {

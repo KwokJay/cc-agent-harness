@@ -5,15 +5,18 @@ export class CodexAdapter implements ToolAdapter {
   label = "OpenAI Codex";
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
-    return [this.configToml(ctx)];
-  }
-
-  private configToml(ctx: ToolAdapterContext): GeneratedFile {
     const lines = [
       `# Codex project configuration`,
       `# See https://developers.openai.com/codex/config-reference`,
       ``,
     ];
+
+    if (ctx.skillContents.length > 0) {
+      const fallbacks = ctx.skillContents.map((s) => `.harness/skills/${s.name}/SKILL.md`);
+      lines.push(`# Skill files (Codex reads AGENTS.md natively; these are fallback references)`);
+      lines.push(`project_doc_fallback_filenames = [${fallbacks.map((f) => `"${f}"`).join(", ")}]`);
+      lines.push(``);
+    }
 
     if (ctx.verificationChecks.length > 0) {
       const verifyCmd = ctx.verificationChecks
@@ -24,10 +27,10 @@ export class CodexAdapter implements ToolAdapter {
       lines.push(``);
     }
 
-    return {
+    return [{
       path: ".codex/config.toml",
       content: lines.join("\n"),
       description: "Codex CLI project configuration",
-    };
+    }];
   }
 }

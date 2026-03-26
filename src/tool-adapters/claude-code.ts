@@ -11,6 +11,14 @@ export class ClaudeCodeAdapter implements ToolAdapter {
       files.push(this.verifyCommand(ctx));
     }
 
+    for (const skill of ctx.skillContents) {
+      files.push({
+        path: `.claude/rules/skill-${skill.name}.md`,
+        content: `---\npaths: "**"\n---\n\n${skill.body}\n`,
+        description: `Claude Code skill rule: ${skill.name}`,
+      });
+    }
+
     return files;
   }
 

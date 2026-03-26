@@ -5,7 +5,15 @@ export class CopilotAdapter implements ToolAdapter {
   label = "GitHub Copilot";
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
-    return [this.instructions(ctx)];
+    const files = [this.instructions(ctx)];
+    for (const skill of ctx.skillContents) {
+      files.push({
+        path: `.github/instructions/skill-${skill.name}.instructions.md`,
+        content: `---\napplyTo: "**"\n---\n\n${skill.body}\n`,
+        description: `Copilot skill instruction: ${skill.name}`,
+      });
+    }
+    return files;
   }
 
   private instructions(ctx: ToolAdapterContext): GeneratedFile {
