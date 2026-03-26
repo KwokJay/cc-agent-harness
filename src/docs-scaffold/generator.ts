@@ -1,85 +1,70 @@
 import type { GeneratedFile } from "../tool-adapters/types.js";
 import type { ProjectTypeId } from "../project-types/types.js";
 
-export function generateDocsDirectory(projectName: string, projectType: ProjectTypeId): GeneratedFile[] {
+const DOC_TYPES = [
+  { dir: "requirements", label: "Requirements", desc: "Product requirements, user stories, and acceptance criteria" },
+  { dir: "design", label: "Design", desc: "UX/interaction design, wireframes, and design decisions" },
+  { dir: "architecture", label: "Architecture", desc: "Technical architecture, system design, and API contracts" },
+  { dir: "testing", label: "Testing", desc: "Test plans, test cases, and testing strategies" },
+  { dir: "changelog", label: "Changelog", desc: "Change records organized by date or version" },
+  { dir: "releases", label: "Releases", desc: "Version release notes and deployment records" },
+] as const;
+
+export function generateDocsDirectory(projectName: string, _projectType: ProjectTypeId): GeneratedFile[] {
   const files: GeneratedFile[] = [];
 
   files.push({
-    path: "docs/README.md",
-    content: docsReadme(projectName),
-    description: "Documentation directory index",
+    path: ".harness/docs/README.md",
+    content: docsRootReadme(projectName),
+    description: "Documentation root index",
   });
 
   files.push({
-    path: "docs/requirements/README.md",
-    content: sectionReadme("Requirements", "Product requirements, user stories, and acceptance criteria."),
-    description: "Requirements section",
-  });
-  files.push({
-    path: "docs/requirements/.gitkeep",
-    content: "",
-    description: "Requirements directory placeholder",
-  });
-
-  files.push({
-    path: "docs/design/README.md",
-    content: sectionReadme("Design", "UX/interaction design, wireframes, and design decisions."),
-    description: "Design section",
-  });
-  files.push({
-    path: "docs/design/.gitkeep",
-    content: "",
-    description: "Design directory placeholder",
-  });
-
-  files.push({
-    path: "docs/architecture/README.md",
-    content: sectionReadme("Architecture", "Technical architecture, system design, and API contracts."),
-    description: "Architecture section",
-  });
-  files.push({
-    path: "docs/architecture/.gitkeep",
-    content: "",
-    description: "Architecture directory placeholder",
-  });
-
-  files.push({
-    path: "docs/testing/README.md",
-    content: sectionReadme("Testing", "Test plans, test cases, and testing strategies."),
-    description: "Testing section",
-  });
-  files.push({
-    path: "docs/testing/.gitkeep",
-    content: "",
-    description: "Testing directory placeholder",
-  });
-
-  files.push({
-    path: "docs/changelog/README.md",
-    content: sectionReadme("Changelog", "Change records organized by date or version."),
-    description: "Changelog section",
-  });
-  files.push({
-    path: "docs/changelog/.gitkeep",
-    content: "",
-    description: "Changelog directory placeholder",
-  });
-
-  files.push({
-    path: "docs/releases/README.md",
-    content: sectionReadme("Releases", "Version release notes and deployment records."),
-    description: "Releases section",
-  });
-  files.push({
-    path: "docs/releases/.gitkeep",
-    content: "",
-    description: "Releases directory placeholder",
-  });
-
-  files.push({
-    path: "docs/CONVENTIONS.md",
+    path: ".harness/docs/CONVENTIONS.md",
     content: docsConventions(projectName),
     description: "Documentation conventions and constraints",
+  });
+
+  files.push({
+    path: ".harness/docs/_templates/requirement.md",
+    content: requirementTemplate(),
+    description: "Template: requirement document",
+  });
+
+  files.push({
+    path: ".harness/docs/_templates/design.md",
+    content: designTemplate(),
+    description: "Template: design document",
+  });
+
+  files.push({
+    path: ".harness/docs/_templates/architecture.md",
+    content: architectureTemplate(),
+    description: "Template: architecture document",
+  });
+
+  files.push({
+    path: ".harness/docs/_templates/test-plan.md",
+    content: testPlanTemplate(),
+    description: "Template: test plan document",
+  });
+
+  files.push({
+    path: ".harness/docs/_templates/changelog-entry.md",
+    content: changelogTemplate(),
+    description: "Template: changelog entry",
+  });
+
+  files.push({
+    path: ".harness/docs/_templates/release-note.md",
+    content: releaseNoteTemplate(),
+    description: "Template: release note",
+  });
+
+  files.push({
+    path: ".harness/docs/_templates/module-readme.md",
+    content: moduleReadmeTemplate(),
+    description: "Template: module README for new doc modules",
   });
 
   return files;
@@ -93,91 +78,296 @@ export function generateDocsConstraintRule(projectName: string): GeneratedFile {
   };
 }
 
-function docsReadme(projectName: string): string {
+function docsRootReadme(projectName: string): string {
   return `# ${projectName} Documentation
 
-This directory contains all project documentation, organized by lifecycle phase.
+All project documentation lives under \`.harness/docs/\`, organized by module.
 
-## Structure
+## Directory Structure
 
-| Directory | Purpose |
-|-----------|---------|
-| \`requirements/\` | Product requirements, user stories, acceptance criteria |
-| \`design/\` | UX/interaction design, wireframes, design decisions |
-| \`architecture/\` | Technical architecture, system design, API contracts |
-| \`testing/\` | Test plans, test cases, testing strategies |
-| \`changelog/\` | Change records by date or version |
-| \`releases/\` | Version release notes and deployment records |
+\`\`\`text
+.harness/docs/
+  README.md              <- this file
+  CONVENTIONS.md         <- naming, formatting, and maintenance rules
+  _templates/            <- document templates for each type
+  {module-name}/         <- one directory per module or feature domain
+    requirements/        <- product requirements
+    design/              <- UX/interaction design
+    architecture/        <- technical design and API contracts
+    testing/             <- test plans and test cases
+    changelog/           <- change records
+    releases/            <- version release notes
+    README.md            <- module overview and document index
+\`\`\`
 
-## Conventions
+## How to Add a New Module
 
-See [CONVENTIONS.md](./CONVENTIONS.md) for naming, formatting, and maintenance rules.
+1. Create a directory: \`.harness/docs/{module-name}/\`
+2. Copy the module README template: \`cp _templates/module-readme.md {module-name}/README.md\`
+3. Create subdirectories as needed: \`requirements/\`, \`design/\`, \`architecture/\`, \`testing/\`
+4. Use templates from \`_templates/\` for each document type
 
-## Important
+## Rules
 
-All project documentation MUST be created within this directory structure.
-Do not create documentation files outside of \`docs/\` unless they are standard
-root-level files (README.md, CHANGELOG.md, LICENSE, etc.).
-`;
-}
-
-function sectionReadme(title: string, description: string): string {
-  return `# ${title}
-
-${description}
-
-## Naming Convention
-
-- Use lowercase with hyphens: \`feature-user-auth.md\`
-- Prefix with date for time-sensitive documents: \`2026-03-25-sprint-review.md\`
-- Use descriptive names that indicate content, not generic names like \`doc1.md\`
+- ALL project documentation MUST be placed under \`.harness/docs/{module}/\`
+- Use lowercase-hyphenated directory and file names
+- Update the module README.md when adding new documents
+- See [CONVENTIONS.md](./CONVENTIONS.md) for full rules
 `;
 }
 
 function docsConventions(projectName: string): string {
   return `# Documentation Conventions for ${projectName}
 
-## File Placement Rules
+## Placement Rules
 
-1. **All documentation MUST live under \`docs/\`** in the appropriate subdirectory.
-2. **Root-level exceptions**: Only \`README.md\`, \`CHANGELOG.md\`, \`CONTRIBUTING.md\`, \`LICENSE\`, \`AGENTS.md\`, and \`CLAUDE.md\` may exist at the repository root.
-3. **No scattered docs**: Do not create \`.md\` files in \`src/\`, \`app/\`, or other code directories for project documentation. Code-level docs (JSDoc, docstrings) are fine.
+1. **All documentation MUST live under \`.harness/docs/\`** organized by module.
+2. Each module gets its own directory: \`.harness/docs/{module-name}/\`
+3. Inside each module, organize by document type:
+   - \`requirements/\` - product requirements and user stories
+   - \`design/\` - UX, interaction design, wireframes
+   - \`architecture/\` - technical design, API contracts, data models
+   - \`testing/\` - test plans, test cases
+   - \`changelog/\` - change records
+   - \`releases/\` - version release notes
+4. **Root-level exceptions**: Only README.md, CHANGELOG.md, CONTRIBUTING.md, LICENSE, AGENTS.md, and CLAUDE.md may exist at the repository root.
+5. **No scattered docs**: Do not create project documentation in \`src/\`, \`app/\`, or other code directories.
+
+## Module Directory Rules
+
+- Module names use lowercase-hyphenated format: \`user-auth\`, \`payment-service\`, \`api-gateway\`
+- Each module directory MUST have a \`README.md\` that indexes all documents within
+- Cross-module references use relative paths: \`[See API design](../api-gateway/architecture/api-v2.md)\`
 
 ## Naming Rules
 
-- Use lowercase with hyphens: \`api-design-v2.md\`
-- Prefix time-sensitive docs with ISO date: \`2026-03-25-migration-plan.md\`
-- Use the section name as context, not redundant prefixes: \`docs/requirements/user-auth.md\` not \`docs/requirements/req-user-auth.md\`
+- Use lowercase with hyphens: \`user-auth-requirements.md\`
+- Prefix time-sensitive docs with ISO date: \`2026-03-25-sprint-review.md\`
+- Use descriptive names, not generic: \`payment-flow.md\` not \`doc1.md\`
 
-## Format Rules
+## Templates
 
-- Start every document with a level-1 heading matching the filename intent.
-- Include a "Last Updated" line or use git blame for tracking.
-- Use Markdown tables for structured comparisons.
-- Use code blocks with language tags for technical examples.
-
-## Cross-References
-
-- Link between docs using relative paths: \`[See architecture](../architecture/api-design.md)\`
-- Maintain the section README as an index of documents within that section.
-
-## Change Records
-
-- \`changelog/\`: One file per significant change or sprint, describing what changed and why.
-- \`releases/\`: One file per version release, summarizing included changes.
+Use templates from \`.harness/docs/_templates/\` when creating new documents:
+- \`requirement.md\` - for product requirements
+- \`design.md\` - for UX/interaction design
+- \`architecture.md\` - for technical architecture
+- \`test-plan.md\` - for test plans
+- \`changelog-entry.md\` - for change records
+- \`release-note.md\` - for release notes
+- \`module-readme.md\` - for new module README
 
 ## Maintenance
 
-- When adding a new document, update the section's \`README.md\` index.
-- When removing a feature, archive its docs rather than deleting.
-- Run \`agent-harness doctor\` to verify documentation structure integrity.
+- When adding a document, update the module's README.md index
+- When removing a feature, archive docs rather than deleting
+- Changelog entries reference the module they affect
+`;
+}
+
+function requirementTemplate(): string {
+  return `# [Requirement Title]
+
+## Overview
+
+[Brief description of the requirement]
+
+## User Stories
+
+- As a [role], I want to [action] so that [benefit]
+
+## Acceptance Criteria
+
+- [ ] [Criterion 1]
+- [ ] [Criterion 2]
+
+## Priority
+
+[High / Medium / Low]
+
+## Notes
+
+[Additional context, constraints, dependencies]
+`;
+}
+
+function designTemplate(): string {
+  return `# [Design Title]
+
+## Problem Statement
+
+[What problem does this design solve?]
+
+## Proposed Solution
+
+[Description of the design approach]
+
+## User Flow
+
+[Step-by-step user interaction flow]
+
+## Wireframes / Mockups
+
+[Links or descriptions of visual designs]
+
+## Open Questions
+
+- [Question 1]
+
+## Decision Record
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| | | |
+`;
+}
+
+function architectureTemplate(): string {
+  return `# [Architecture Title]
+
+## Context
+
+[Why is this design needed? What constraints exist?]
+
+## Decision
+
+[The chosen approach]
+
+## Components
+
+[Key components and their responsibilities]
+
+## Data Flow
+
+[How data moves through the system]
+
+## API Contracts
+
+[Endpoint definitions, request/response shapes]
+
+## Trade-offs
+
+[What was considered and rejected, and why]
+
+## Dependencies
+
+[External services, libraries, or systems involved]
+`;
+}
+
+function testPlanTemplate(): string {
+  return `# [Test Plan Title]
+
+## Scope
+
+[What is being tested]
+
+## Test Strategy
+
+[Unit / Integration / E2E / Manual]
+
+## Test Cases
+
+| ID | Description | Input | Expected Output | Status |
+|----|-------------|-------|-----------------|--------|
+| TC-01 | | | | |
+
+## Environment
+
+[Test environment requirements]
+
+## Exit Criteria
+
+- [ ] All critical test cases pass
+- [ ] No P0/P1 bugs open
+`;
+}
+
+function changelogTemplate(): string {
+  return `# [Date or Version] - [Change Title]
+
+## Module
+
+[Which module is affected]
+
+## Changes
+
+- [Change 1]
+- [Change 2]
+
+## Impact
+
+[What is affected by this change]
+
+## Related Documents
+
+- [Link to requirement]
+- [Link to design]
+`;
+}
+
+function releaseNoteTemplate(): string {
+  return `# Release [Version]
+
+## Date
+
+[Release date]
+
+## Highlights
+
+- [Highlight 1]
+- [Highlight 2]
+
+## Changes
+
+### Added
+- [New feature]
+
+### Changed
+- [Modified behavior]
+
+### Fixed
+- [Bug fix]
+
+## Known Issues
+
+- [Issue 1]
+
+## Upgrade Notes
+
+[Any special steps needed for upgrading]
+`;
+}
+
+function moduleReadmeTemplate(): string {
+  return `# [Module Name]
+
+## Overview
+
+[Brief description of this module's purpose and scope]
+
+## Documents
+
+### Requirements
+- [Link to requirements docs]
+
+### Design
+- [Link to design docs]
+
+### Architecture
+- [Link to architecture docs]
+
+### Testing
+- [Link to test plans]
+
+### Changelog
+- [Link to change records]
 `;
 }
 
 function docsGovernanceSkill(projectName: string): string {
   return `---
 name: docs-governance
-description: Enforce documentation placement, naming, and maintenance rules. Use whenever creating, moving, or updating project documentation.
+description: Enforce documentation placement, naming, and maintenance rules for ${projectName}. Use whenever creating, moving, or updating project documentation.
 ---
 
 # Documentation Governance
@@ -186,31 +376,41 @@ When working on documentation for ${projectName}, follow these strict rules:
 
 ## Placement
 
-- ALL project documentation MUST be placed under \`docs/\` in the correct subdirectory:
-  - Requirements -> \`docs/requirements/\`
-  - Design -> \`docs/design/\`
-  - Architecture -> \`docs/architecture/\`
-  - Testing -> \`docs/testing/\`
-  - Changelog -> \`docs/changelog/\`
-  - Releases -> \`docs/releases/\`
+- ALL project documentation MUST be placed under \`.harness/docs/{module-name}/\` in the correct subdirectory:
+  - Requirements -> \`.harness/docs/{module}/requirements/\`
+  - Design -> \`.harness/docs/{module}/design/\`
+  - Architecture -> \`.harness/docs/{module}/architecture/\`
+  - Testing -> \`.harness/docs/{module}/testing/\`
+  - Changelog -> \`.harness/docs/{module}/changelog/\`
+  - Releases -> \`.harness/docs/{module}/releases/\`
 - NEVER create documentation files in \`src/\`, \`app/\`, or other code directories.
-- Only standard root files are allowed outside \`docs/\`: README.md, CHANGELOG.md, CONTRIBUTING.md, LICENSE, AGENTS.md, CLAUDE.md.
+- Only standard root files are allowed outside \`.harness/docs/\`: README.md, CHANGELOG.md, CONTRIBUTING.md, LICENSE, AGENTS.md, CLAUDE.md.
+
+## Creating a New Module
+
+1. Create directory: \`.harness/docs/{module-name}/\`
+2. Copy template: \`.harness/docs/_templates/module-readme.md\` -> \`.harness/docs/{module-name}/README.md\`
+3. Create needed subdirectories: \`requirements/\`, \`design/\`, \`architecture/\`, \`testing/\`
+
+## Creating a New Document
+
+1. Identify the module and document type
+2. Copy the appropriate template from \`.harness/docs/_templates/\`
+3. Place it in \`.harness/docs/{module}/{type}/\`
+4. Update the module's README.md to list the new document
 
 ## Naming
 
-- Use lowercase with hyphens: \`feature-name.md\`
-- Prefix time-sensitive docs with ISO date: \`2026-03-25-topic.md\`
-
-## After Creating a Document
-
-1. Update the section's \`README.md\` to list the new document.
-2. If the document references other docs, use relative paths.
+- Module names: lowercase-hyphenated (\`user-auth\`, \`payment-service\`)
+- File names: lowercase-hyphenated, descriptive (\`api-design-v2.md\`)
+- Time-sensitive: prefix with ISO date (\`2026-03-25-migration-plan.md\`)
 
 ## Review Checklist
 
-- [ ] Document is in the correct \`docs/\` subdirectory
-- [ ] Filename follows naming convention
-- [ ] Section README.md is updated
+- [ ] Document is in \`.harness/docs/{module}/{type}/\`
+- [ ] Module README.md is updated
+- [ ] Template was used as starting point
 - [ ] Cross-references use relative paths
+- [ ] Filename follows naming convention
 `;
 }
