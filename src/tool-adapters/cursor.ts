@@ -1,4 +1,5 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 
 export class CursorAdapter implements ToolAdapter {
   id = "cursor" as const;
@@ -41,6 +42,8 @@ export class CursorAdapter implements ToolAdapter {
         return cmd ? `- \`${cmd}\`` : `- ${c}`;
       }),
       ``,
+      ``,
+      getDocsConstraintParagraph(),
       `## Reference`,
       ``,
       `See AGENTS.md for full project instructions.`,

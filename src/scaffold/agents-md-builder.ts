@@ -1,4 +1,5 @@
 import type { DetectedProject, WorkflowCommands } from "../project-types/types.js";
+import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 
 export interface AgentsMdOptions {
   projectName: string;
@@ -65,6 +66,8 @@ export function buildAgentsMd(opts: AgentsMdOptions): string {
     }
     sections.push("");
   }
+
+  sections.push(getDocsConstraintParagraph());
 
   if (opts.skills.length > 0) {
     sections.push("## Skills");
