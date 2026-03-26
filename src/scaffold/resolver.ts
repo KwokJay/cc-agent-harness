@@ -8,6 +8,7 @@ import { generateToolpackSetupGuide, getToolpack } from "../toolpacks/registry.j
 import { generateDocsDirectory, generateDocsConstraintRule } from "../docs-scaffold/generator.js";
 import { generateSkillExtractionGuide } from "../skill-extraction/generator.js";
 import { analyzeAndExtractSkills } from "../skill-extraction/analyzer.js";
+import { generateChangelog } from "../changelog/generator.js";
 
 export interface ResolveOptions {
   cwd: string;
@@ -89,6 +90,8 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
   files.push(...generateSkillExtractionGuide(opts.projectName, project));
 
   files.push(...analyzeAndExtractSkills(opts.cwd, project, opts.projectName));
+
+  files.push(...generateChangelog(opts.cwd, opts.projectName));
 
   if (!opts.skipDocs) {
     files.push(...generateDocsDirectory(opts.projectName, project.type));

@@ -1,5 +1,6 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
+import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 
 export class ClaudeCodeAdapter implements ToolAdapter {
   id = "claude-code" as const;
@@ -57,6 +58,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     }
 
     lines.push(getDocsConstraintParagraph());
+    lines.push(getChangelogConstraintParagraph());
 
     return {
       path: "CLAUDE.md",
