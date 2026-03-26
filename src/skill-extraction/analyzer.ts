@@ -10,11 +10,16 @@ export interface ExtractedSkill {
   category: "technical" | "business";
 }
 
-export function analyzeAndExtractSkills(
+export interface AnalysisResult {
+  skills: ExtractedSkill[];
+  files: GeneratedFile[];
+}
+
+export function analyzeProject(
   cwd: string,
   project: DetectedProject,
   projectName: string,
-): GeneratedFile[] {
+): AnalysisResult {
   const skills: ExtractedSkill[] = [];
 
   skills.push(...extractFromDependencies(cwd, project));
@@ -45,7 +50,15 @@ export function analyzeAndExtractSkills(
   files.push(generateSkillIndex(skills, projectName));
   files.push(generateDeepExtractionTask(projectName, project, skills));
 
-  return files;
+  return { skills, files };
+}
+
+export function analyzeAndExtractSkills(
+  cwd: string,
+  project: DetectedProject,
+  projectName: string,
+): GeneratedFile[] {
+  return analyzeProject(cwd, project, projectName).files;
 }
 
 function extractFromDependencies(cwd: string, project: DetectedProject): ExtractedSkill[] {

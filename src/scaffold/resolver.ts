@@ -7,7 +7,7 @@ import { generateSkillCreatorFiles } from "../toolpacks/skill-creator.js";
 import { generateToolpackSetupGuide, getToolpack } from "../toolpacks/registry.js";
 import { generateDocsDirectory, generateDocsConstraintRule } from "../docs-scaffold/generator.js";
 import { generateSkillExtractionGuide } from "../skill-extraction/generator.js";
-import { analyzeAndExtractSkills } from "../skill-extraction/analyzer.js";
+import { analyzeProject } from "../skill-extraction/analyzer.js";
 import { generateChangelog } from "../changelog/generator.js";
 
 export interface ResolveOptions {
@@ -64,7 +64,18 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     description: "Cross-tool AI agent instructions",
   });
 
-  const skillContents = getSkillContents(project.type);
+  const presetSkillContents = getSkillContents(project.type);
+
+  const analysis = analyzeProject(opts.cwd, project, opts.projectName);
+  files.push(...analysis.files);
+
+  const extractedSkillContents: SkillContent[] = analysis.skills.map((s) => ({
+    name: s.name,
+    description: s.description,
+    body: s.body,
+  }));
+
+  const allSkillContents = [...presetSkillContents, ...extractedSkillContents];
 
   const ctx: ToolAdapterContext = {
     projectName: opts.projectName,
@@ -74,7 +85,7 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     verificationChecks,
     customRules,
     skills,
-    skillContents,
+    skillContents: allSkillContents,
   };
 
   for (const toolId of opts.tools) {
@@ -88,8 +99,6 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
   files.push(...generateSkillCreatorFiles());
 
   files.push(...generateSkillExtractionGuide(opts.projectName, project));
-
-  files.push(...analyzeAndExtractSkills(opts.cwd, project, opts.projectName));
 
   files.push(...generateChangelog(opts.cwd, opts.projectName));
 
