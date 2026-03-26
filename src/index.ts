@@ -14,3 +14,4 @@ export { getAllToolpacks, getOptionalToolpacks, getToolpack, type Toolpack, type
 export { generateSkillCreatorFiles } from "./toolpacks/skill-creator.js";
 export { generateDocsDirectory, generateDocsConstraintRule } from "./docs-scaffold/generator.js";
 export { generateSkillExtractionGuide } from "./skill-extraction/generator.js";
+export { analyzeAndExtractSkills, type ExtractedSkill } from "./skill-extraction/analyzer.js";

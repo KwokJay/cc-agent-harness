@@ -7,6 +7,7 @@ import { generateSkillCreatorFiles } from "../toolpacks/skill-creator.js";
 import { generateToolpackSetupGuide, getToolpack } from "../toolpacks/registry.js";
 import { generateDocsDirectory, generateDocsConstraintRule } from "../docs-scaffold/generator.js";
 import { generateSkillExtractionGuide } from "../skill-extraction/generator.js";
+import { analyzeAndExtractSkills } from "../skill-extraction/analyzer.js";
 
 export interface ResolveOptions {
   cwd: string;
@@ -86,6 +87,8 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
   files.push(...generateSkillCreatorFiles());
 
   files.push(...generateSkillExtractionGuide(opts.projectName, project));
+
+  files.push(...analyzeAndExtractSkills(opts.cwd, project, opts.projectName));
 
   if (!opts.skipDocs) {
     files.push(...generateDocsDirectory(opts.projectName, project.type));
