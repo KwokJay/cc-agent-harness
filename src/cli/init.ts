@@ -5,6 +5,7 @@ import { detectProjectType, ALL_PROJECT_TYPE_IDS } from "../project-types/index.
 import { ALL_TOOL_IDS } from "../tool-adapters/index.js";
 import type { ProjectTypeId } from "../project-types/types.js";
 import type { ToolId } from "../tool-adapters/types.js";
+import { selectExtractionTool, invokeSkillExtraction } from "../skill-extraction/invoker.js";
 
 export interface InitOptions {
   project?: string;
@@ -71,16 +72,36 @@ export async function runInit(opts: InitOptions): Promise<void> {
     console.log("\n  Cursor:      .cursor/rules/ ready");
   }
   if (tools.includes("claude-code")) {
-    console.log("  Claude Code: CLAUDE.md ready (imports AGENTS.md)");
+    console.log("  Claude Code: CLAUDE.md + .claude/skills/ ready");
   }
   if (tools.includes("copilot")) {
     console.log("  Copilot:     .github/copilot-instructions.md ready");
   }
   if (tools.includes("codex")) {
-    console.log("  Codex:       .codex/config.toml ready");
+    console.log("  Codex:       .codex/config.toml + .agents/skills/ ready");
   }
   if (tools.includes("opencode")) {
-    console.log("  OpenCode:    opencode.json ready");
+    console.log("  OpenCode:    opencode.json + .opencode/skills/ ready");
+  }
+
+  console.log("\n--- Skill Extraction (Step 2: AI-powered) ---\n");
+
+  const extractionTool = selectExtractionTool(tools);
+  if (!extractionTool) {
+    console.log("  No CLI-invocable AI tool selected. To extract deeper skills:");
+    console.log("  Open .harness/skills/EXTRACTION-TASK.md in your AI coding tool.");
+    return;
+  }
+
+  const extractionResult = invokeSkillExtraction(cwd, extractionTool);
+
+  if (extractionResult.success) {
+    console.log(`  Skill extraction via ${extractionResult.tool} completed.`);
+  } else {
+    console.log(`  Could not auto-invoke ${extractionResult.tool}: ${extractionResult.output}`);
+    console.log("");
+    console.log("  To extract skills manually, open your AI tool and run:");
+    console.log(`  "Read .harness/skills/EXTRACTION-TASK.md and execute the task"`);
   }
 }
 
