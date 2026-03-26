@@ -1,5 +1,5 @@
-<p align="center"><code>npm install -g agent-harness</code></p>
-<p align="center"><strong>agent-harness</strong> 是一个面向 AI 辅助开发工作流的、厂商中立的 CLI 与 TypeScript 工具包。</p>
+<p align="center"><code>npm install -g cc-agent-harness</code></p>
+<p align="center"><strong>cc-agent-harness</strong> 是一个面向 AI 辅助开发工作流的、厂商中立的 CLI 与 TypeScript 工具包。</p>
 <p align="center"><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a></p>
 
 它帮助团队统一项目初始化、`AGENTS.md` 生成、技能发现、健康检查和验证流水线，同时避免被某一家模型供应商或某一种 agent 框架绑定。
@@ -13,10 +13,10 @@
 使用 npm 全局安装：
 
 ```shell
-npm install -g agent-harness
+npm install -g cc-agent-harness
 ```
 
-然后在项目目录中初始化：
+安装后使用 `agent-harness` CLI 进入项目初始化：
 
 ```shell
 agent-harness setup
@@ -43,6 +43,8 @@ pnpm lint
 - 发现、校验并脚手架化可复用技能。
 - 检测当前项目类型，并为 TypeScript、Python、Rust 提供默认验证命令。
 - 执行项目健康检查，以及可配置的 build、test、lint 验证流水线。
+- 基于分层 `AGENTS.md`、自定义规则和本地技能构建可复用上下文。
+- 在主 CLI 中暴露 hooks、审计日志和 feature 可观测能力。
 - 以 TypeScript 库形式暴露同一套能力，便于程序化集成。
 
 ## 常用命令
@@ -52,9 +54,12 @@ pnpm lint
 | `agent-harness setup` | 初始化 `.harness/` 并生成 `AGENTS.md` |
 | `agent-harness update` | 同步模板和配置 |
 | `agent-harness doctor` | 对当前项目执行健康检查 |
+| `agent-harness doctor --json` | 输出机器可读的健康检查结果 |
 | `agent-harness verify` | 运行配置好的验证流水线 |
+| `agent-harness verify --json` | 输出机器可读的验证结果 |
 | `agent-harness run <task>` | 执行命名工作流或适配器提供的命令 |
-| `agent-harness list <resource>` | 列出 `skills`、`agents`、`commands` 或 `templates` |
+| `agent-harness context build` | 构建可复用的 agent 上下文 |
+| `agent-harness list <resource>` | 列出 `skills`、`agents`、`commands`、`templates` 或 `features` |
 | `agent-harness config show` | 输出合并后的配置 |
 | `agent-harness config validate` | 校验配置文件是否合法 |
 | `agent-harness schema generate` | 生成配置对应的 JSON Schema |
@@ -103,7 +108,7 @@ templates:
 
 ### 模型档位
 
-`agent-harness` 的模型路由是厂商中立的。agent 和工作流只感知 `low`、`medium`、`high` 三个档位，`providers` 负责把这些档位映射到真实模型 ID。
+`cc-agent-harness` 的模型路由是厂商中立的。agent 和工作流只感知 `low`、`medium`、`high` 三个档位，`providers` 负责把这些档位映射到真实模型 ID。
 
 ```yaml
 agents:
@@ -117,6 +122,7 @@ agents:
 
 ```typescript
 import {
+  HarnessRuntime,
   loadConfig,
   AgentRegistry,
   discoverSkills,
@@ -124,9 +130,10 @@ import {
   inferComplexity,
   runHealthChecks,
   render,
-} from "agent-harness";
+} from "cc-agent-harness";
 
 const config = await loadConfig();
+const runtime = await HarnessRuntime.create();
 const registry = new AgentRegistry(config.agents.definitions);
 const agent = registry.get("executor");
 const tier = routeModel(
@@ -135,6 +142,7 @@ const tier = routeModel(
 );
 const skills = await discoverSkills(config.skills.directories);
 const report = await runHealthChecks([]);
+const context = await runtime.buildContext({ tagStyle: "xml" });
 const output = render("Hello {{name}}", { name: "World" });
 ```
 
@@ -168,6 +176,23 @@ Usage instructions here.
 ```shell
 agent-harness scaffold skill my-skill -d "Description of the skill"
 ```
+
+## 上下文构建
+
+你可以基于分层 `AGENTS.md`、配置里的自定义规则和发现到的技能，构建可复用的上下文产物：
+
+```shell
+agent-harness context build
+agent-harness context build --format xml
+agent-harness context build --output .harness/context.md
+```
+
+这对 IDE agent、外部执行器，以及任何需要稳定上下文输入的工作流都很有用。
+
+## 包名与命令名
+
+- npm 包名：`cc-agent-harness`
+- CLI 命令：`agent-harness`
 
 ## 架构概览
 
@@ -208,4 +233,4 @@ src/
 
 ## License
 
-MIT
+基于 [MIT License](./LICENSE) 开源。

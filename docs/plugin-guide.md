@@ -9,7 +9,7 @@ Plugins extend agent-harness by contributing adapters, agents, hooks, health che
 Implement the `HarnessPlugin` interface:
 
 ```typescript
-import type { HarnessPlugin } from "agent-harness";
+import type { HarnessPlugin } from "cc-agent-harness";
 
 export const myPlugin: HarnessPlugin = {
   name: "harness-plugin-example",
@@ -48,7 +48,7 @@ export const myPlugin: HarnessPlugin = {
 ## Registering Plugins
 
 ```typescript
-import { PluginRegistry } from "agent-harness";
+import { PluginRegistry } from "cc-agent-harness";
 import { myPlugin } from "./my-plugin.js";
 
 const plugins = new PluginRegistry();
@@ -95,7 +95,7 @@ interface HarnessPlugin {
 To support tools from another ecosystem (e.g., Codex skills):
 
 ```typescript
-import type { HarnessPlugin } from "agent-harness";
+import type { HarnessPlugin } from "cc-agent-harness";
 
 export const codexCompatPlugin: HarnessPlugin = {
   name: "harness-plugin-codex-compat",

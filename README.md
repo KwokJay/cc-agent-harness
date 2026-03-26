@@ -1,5 +1,5 @@
-<p align="center"><code>npm install -g agent-harness</code></p>
-<p align="center"><strong>agent-harness</strong> is a vendor-neutral CLI and TypeScript toolkit for AI-assisted development workflows.</p>
+<p align="center"><code>npm install -g cc-agent-harness</code></p>
+<p align="center"><strong>cc-agent-harness</strong> is a vendor-neutral CLI and TypeScript toolkit for AI-assisted development workflows.</p>
 <p align="center"><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a></p>
 
 It helps teams standardize project setup, `AGENTS.md` generation, skill discovery, health checks, and verification pipelines without locking into a single model vendor or agent framework.
@@ -13,10 +13,10 @@ It helps teams standardize project setup, `AGENTS.md` generation, skill discover
 Install globally with npm:
 
 ```shell
-npm install -g agent-harness
+npm install -g cc-agent-harness
 ```
 
-Then initialize a project:
+Then initialize a project with the `agent-harness` CLI:
 
 ```shell
 agent-harness setup
@@ -43,6 +43,8 @@ pnpm lint
 - Discovers, validates, and scaffolds reusable project skills.
 - Detects project type and resolves verification commands for TypeScript, Python, and Rust.
 - Runs project health checks plus configurable verification pipelines like build, test, and lint.
+- Assembles reusable agent context from hierarchical `AGENTS.md`, custom rules, and discovered skills.
+- Exposes lifecycle hooks, audit logging, and feature observability through the main CLI.
 - Exposes the same primitives as a TypeScript library for deeper integration.
 
 ## Common Commands
@@ -52,9 +54,12 @@ pnpm lint
 | `agent-harness setup` | Initialize `.harness/` and generate `AGENTS.md` |
 | `agent-harness update` | Sync templates and configuration |
 | `agent-harness doctor` | Run health checks for the current project |
+| `agent-harness doctor --json` | Output machine-readable health results |
 | `agent-harness verify` | Execute the configured verification pipeline |
+| `agent-harness verify --json` | Output machine-readable verification results |
 | `agent-harness run <task>` | Run a named workflow or adapter command |
-| `agent-harness list <resource>` | List `skills`, `agents`, `commands`, or `templates` |
+| `agent-harness context build` | Build reusable agent context from project docs and skills |
+| `agent-harness list <resource>` | List `skills`, `agents`, `commands`, `templates`, or `features` |
 | `agent-harness config show` | Print merged configuration |
 | `agent-harness config validate` | Validate config files |
 | `agent-harness schema generate` | Generate JSON Schema for the config |
@@ -103,7 +108,7 @@ templates:
 
 ### Model Tiers
 
-`agent-harness` keeps model routing vendor-neutral. Agents and workflows use `low`, `medium`, and `high`, while `providers` maps those tiers to concrete model IDs.
+`cc-agent-harness` keeps model routing vendor-neutral. Agents and workflows use `low`, `medium`, and `high`, while `providers` maps those tiers to concrete model IDs.
 
 ```yaml
 agents:
@@ -117,6 +122,7 @@ agents:
 
 ```typescript
 import {
+  HarnessRuntime,
   loadConfig,
   AgentRegistry,
   discoverSkills,
@@ -124,9 +130,10 @@ import {
   inferComplexity,
   runHealthChecks,
   render,
-} from "agent-harness";
+} from "cc-agent-harness";
 
 const config = await loadConfig();
+const runtime = await HarnessRuntime.create();
 const registry = new AgentRegistry(config.agents.definitions);
 const agent = registry.get("executor");
 const tier = routeModel(
@@ -135,6 +142,7 @@ const tier = routeModel(
 );
 const skills = await discoverSkills(config.skills.directories);
 const report = await runHealthChecks([]);
+const context = await runtime.buildContext({ tagStyle: "xml" });
 const output = render("Hello {{name}}", { name: "World" });
 ```
 
@@ -168,6 +176,23 @@ Create one with:
 ```shell
 agent-harness scaffold skill my-skill -d "Description of the skill"
 ```
+
+## Context Assembly
+
+Build reusable prompt context from hierarchical `AGENTS.md` files, configured custom rules, and discovered skills:
+
+```shell
+agent-harness context build
+agent-harness context build --format xml
+agent-harness context build --output .harness/context.md
+```
+
+This is useful when integrating with IDE agents, external runners, or any workflow that needs a stable context artifact.
+
+## Package And CLI
+
+- npm package: `cc-agent-harness`
+- CLI command: `agent-harness`
 
 ## Architecture
 
@@ -208,4 +233,4 @@ src/
 
 ## License
 
-MIT
+Licensed under the [MIT License](./LICENSE).

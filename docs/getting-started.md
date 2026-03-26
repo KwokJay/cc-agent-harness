@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks through the first successful setup of `agent-harness`, from installation to configuration, health checks, and verification.
+This guide walks through the first successful setup of `cc-agent-harness`, from installation to configuration, health checks, and verification.
 
 ## Prerequisites
 
@@ -15,10 +15,10 @@ This guide walks through the first successful setup of `agent-harness`, from ins
 If you want to use the CLI across projects:
 
 ```shell
-npm install -g agent-harness
+npm install -g cc-agent-harness
 ```
 
-Then verify the command is available:
+Then verify the bundled `agent-harness` command is available:
 
 ```shell
 agent-harness --help
@@ -26,7 +26,7 @@ agent-harness --help
 
 ### Local development
 
-If you are working on `agent-harness` itself:
+If you are working on `cc-agent-harness` itself:
 
 ```shell
 pnpm install
@@ -114,7 +114,7 @@ Use it to define project-specific instructions, workflow expectations, and agent
 
 ## Config layers
 
-`agent-harness` supports layered configuration, from lowest to highest priority:
+`cc-agent-harness` supports layered configuration, from lowest to highest priority:
 
 1. Built-in defaults
 2. `~/.harness/config.yaml`
@@ -129,6 +129,12 @@ Use `doctor` after setup:
 
 ```shell
 agent-harness doctor
+```
+
+For CI or editor integrations, you can also request machine-readable output:
+
+```shell
+agent-harness doctor --json
 ```
 
 `doctor` checks the current project for things like:
@@ -169,6 +175,12 @@ If you want to stop on the first failure:
 agent-harness verify --fail-fast
 ```
 
+For automation, you can also emit machine-readable verification results:
+
+```shell
+agent-harness verify --json
+```
+
 ## Run a named task
 
 Use `run` when you want to execute one specific configured task:
@@ -207,6 +219,30 @@ agent-harness list templates
 ```
 
 Use this when debugging configuration, checking discovered skills, or verifying custom commands.
+
+To inspect configured feature states:
+
+```shell
+agent-harness list features
+```
+
+## Build reusable context
+
+Use `context build` when you want to turn project instructions and local skills into a stable context artifact:
+
+```shell
+agent-harness context build
+agent-harness context build --format xml
+agent-harness context build --output .harness/context.md
+```
+
+The generated context can include:
+
+- hierarchical `AGENTS.md` files from the project tree
+- configured custom rules
+- discovered local skills
+
+This is useful for IDE agents, external runners, and scripted workflows that need reproducible context input.
 
 ## Work with skills
 
@@ -275,7 +311,7 @@ agent-harness update --template agents-md
 
 ## Built-in adapters
 
-`agent-harness` includes built-in adapters for common project types:
+`cc-agent-harness` includes built-in adapters for common project types:
 
 | Adapter | Detection | Typical commands |
 |---------|-----------|------------------|
@@ -287,7 +323,7 @@ If an adapter is detected, its commands can be used by `verify` and `run` automa
 
 ## Programmatic usage
 
-You can also use `agent-harness` as a library:
+You can also use `cc-agent-harness` as a library:
 
 ```typescript
 import {
@@ -297,7 +333,7 @@ import {
   routeModel,
   inferComplexity,
   render,
-} from "agent-harness";
+} from "cc-agent-harness";
 
 const config = await loadConfig();
 const registry = new AgentRegistry(config.agents.definitions);
@@ -314,7 +350,7 @@ const output = render("Hello {{name}}", { name: "World" });
 
 For a new repository, the simplest path is:
 
-1. Install `agent-harness`
+1. Install `cc-agent-harness`
 2. Run `agent-harness setup`
 3. Review `.harness/harness.config.yaml`
 4. Review or customize `AGENTS.md`
@@ -361,6 +397,7 @@ Check:
 
 ## Next docs
 
+- [`../CHANGELOG.md`](../CHANGELOG.md)
 - [`architecture.md`](./architecture.md)
 - [`config-reference.md`](./config-reference.md)
 - [`adapter-guide.md`](./adapter-guide.md)

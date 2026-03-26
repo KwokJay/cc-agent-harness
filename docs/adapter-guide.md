@@ -9,7 +9,7 @@ Project adapters provide language-specific commands and health checks. agent-har
 Implement the `ProjectAdapter` interface:
 
 ```typescript
-import type { ProjectAdapter, CommandDefinition, HealthCheck } from "agent-harness";
+import type { ProjectAdapter, CommandDefinition, HealthCheck } from "cc-agent-harness";
 
 export class GoAdapter implements ProjectAdapter {
   name = "go";
@@ -52,7 +52,7 @@ export class GoAdapter implements ProjectAdapter {
 ### Programmatically
 
 ```typescript
-import { AdapterRegistry } from "agent-harness";
+import { AdapterRegistry } from "cc-agent-harness";
 import { GoAdapter } from "./go-adapter.js";
 
 const registry = new AdapterRegistry([new GoAdapter()]);
@@ -62,7 +62,7 @@ const adapter = await registry.detect(process.cwd());
 ### Via Plugin
 
 ```typescript
-import type { HarnessPlugin } from "agent-harness";
+import type { HarnessPlugin } from "cc-agent-harness";
 import { GoAdapter } from "./go-adapter.js";
 
 export const goPlugin: HarnessPlugin = {
