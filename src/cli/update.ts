@@ -3,6 +3,7 @@ import { basename, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { resolve as resolveScaffold } from "../scaffold/resolver.js";
 import { generateFiles } from "../scaffold/generator.js";
+import { diffPlan } from "../scaffold/differ.js";
 import type { ProjectTypeId } from "../project-types/types.js";
 import type { ToolId } from "../tool-adapters/types.js";
 
@@ -51,10 +52,28 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
     skipDocs,
   });
 
+  const previousFiles = Array.isArray(config.generated_files)
+    ? (config.generated_files as string[])
+    : undefined;
+
+  if (opts.dryRun && previousFiles && previousFiles.length > 0) {
+    const { removed } = diffPlan(cwd, plan.files, previousFiles);
+    if (removed.length > 0) {
+      console.log(
+        "  No longer in harness plan (previous generated_files only; safe to delete manually if you do not need them):",
+      );
+      for (const p of removed) {
+        console.log(`    - ${p}`);
+      }
+      console.log("");
+    }
+  }
+
   const result = await generateFiles(cwd, plan.files, {
     overwrite: opts.full || opts.overwrite,
     mode,
     dryRun: opts.dryRun,
+    mergeStrategy: opts.full || opts.overwrite ? "overwrite" : "keep-manual",
   });
 
   if (result.created.length > 0) {

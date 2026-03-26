@@ -1,4 +1,5 @@
 import type { DetectedProject } from "../project-types/types.js";
+import type { SkillSource } from "../skill-extraction/parser.js";
 
 export type ToolId = "cursor" | "claude-code" | "copilot" | "codex" | "opencode" | "windsurf" | "trae" | "augment";
 
@@ -7,6 +8,8 @@ export interface GeneratedFile {
   content: string;
   description: string;
   source?: "preset" | "extracted" | "tool-adapter" | "harness-config";
+  /** When set, drives merge metadata for harness SKILL.md paths in generateFiles. */
+  harnessSkillSource?: SkillSource;
 }
 
 export interface SkillContent {

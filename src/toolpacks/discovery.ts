@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { ToolpackPlugin } from "./plugin.js";
 import type { ToolId, GeneratedFile } from "../tool-adapters/types.js";
-import type { ToolpackCategory } from "./registry.js";
+import type { ToolpackCategory } from "./categories.js";
 import { loadBuiltinToolpacks } from "./builtin/index.js";
 
 export function discoverToolpacks(cwd: string): ToolpackPlugin[] {

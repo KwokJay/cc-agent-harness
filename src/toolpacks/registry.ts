@@ -1,131 +1,118 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import type { ToolId } from "../tool-adapters/types.js";
 import type { GeneratedFile } from "../tool-adapters/types.js";
+import { discoverToolpacks } from "./discovery.js";
+import type { ToolpackPlugin } from "./plugin.js";
+import type { ToolpackInstallMethod } from "./plugin.js";
+import type { ToolpackCategory } from "./categories.js";
 
-export type ToolpackCategory =
-  | "context-engineering"
-  | "analysis"
-  | "engineering-support"
-  | "init-enhancement";
+export type { ToolpackCategory } from "./categories.js";
 
 export interface Toolpack {
   id: string;
   name: string;
   description: string;
   category: ToolpackCategory;
+  /** Repository URL for setup guide (best-effort for npm/plugin packs). */
   repo: string;
   required: boolean;
   installMethod: "npm" | "brew" | "git-clone" | "plugin" | "copy";
   installCommand: string;
   relevantTools: ToolId[];
+  /** Where the pack definition came from (discovery). */
+  packSource: "builtin" | "local";
+  packVersion: string;
   generateFiles(tools: ToolId[], projectName: string, cwd: string): GeneratedFile[];
 }
 
-const TOOLPACKS: Toolpack[] = [
-  {
-    id: "context-mode",
-    name: "Context Mode",
-    description: "MCP context sandbox with session continuity and local knowledge indexing",
-    category: "context-engineering",
-    repo: "https://github.com/mksglu/context-mode",
-    required: false,
-    installMethod: "npm",
-    installCommand: "npm install -g context-mode",
-    relevantTools: ["cursor", "claude-code", "codex", "opencode"],
-    generateFiles(tools, _projectName, cwd) {
-      const files: GeneratedFile[] = [];
-      if (tools.includes("cursor")) {
-        let mcpConfig: Record<string, unknown> = { mcpServers: {} };
-        const mcpPath = join(cwd, ".cursor/mcp.json");
-        if (existsSync(mcpPath)) {
-          try {
-            mcpConfig = JSON.parse(readFileSync(mcpPath, "utf-8"));
-            if (!mcpConfig.mcpServers || typeof mcpConfig.mcpServers !== "object") {
-              mcpConfig.mcpServers = {};
-            }
-          } catch { /* ignore parse errors, start fresh */ }
-        }
-        (mcpConfig.mcpServers as Record<string, unknown>)["context-mode"] = { command: "npx", args: ["-y", "context-mode"] };
-        files.push({
-          path: ".cursor/mcp.json",
-          content: JSON.stringify(mcpConfig, null, 2) + "\n",
-          description: "Cursor MCP config (merged context-mode)",
-        });
-      }
-      return files;
-    },
-  },
-  {
-    id: "rtk",
-    name: "RTK",
-    description: "Terminal output compression proxy that reduces token usage by 60-90%",
-    category: "context-engineering",
-    repo: "https://github.com/rtk-ai/rtk",
-    required: false,
-    installMethod: "brew",
-    installCommand: "brew install rtk",
-    relevantTools: ["cursor", "claude-code", "copilot", "codex", "opencode"],
-    generateFiles() {
-      return [];
-    },
-  },
-  {
-    id: "understand-anything",
-    name: "Understand Anything",
-    description: "Multi-agent codebase analysis that builds knowledge graphs and architecture dashboards",
-    category: "analysis",
-    repo: "https://github.com/Lum1104/Understand-Anything",
-    required: false,
-    installMethod: "plugin",
-    installCommand: "# Claude Code: /plugin marketplace add Lum1104/Understand-Anything",
-    relevantTools: ["claude-code", "codex", "cursor"],
-    generateFiles() {
-      return [];
-    },
-  },
-  {
-    id: "gstack",
-    name: "gstack",
-    description: "Skills suite that turns Claude Code into a virtual engineering team with QA, review, shipping workflows",
-    category: "engineering-support",
-    repo: "https://github.com/garrytan/gstack",
-    required: false,
-    installMethod: "git-clone",
-    installCommand: "git clone https://github.com/garrytan/gstack.git .claude/skills/gstack && cd .claude/skills/gstack && ./setup",
-    relevantTools: ["claude-code", "codex"],
-    generateFiles(tools) {
-      const files: GeneratedFile[] = [];
-      if (tools.includes("claude-code")) {
-        files.push({
-          path: ".claude/skills/gstack/.gitkeep",
-          content: "# Run: git clone https://github.com/garrytan/gstack.git .claude/skills/gstack && cd .claude/skills/gstack && ./setup\n",
-          description: "gstack placeholder (requires manual clone + setup)",
-        });
-      }
-      return files;
-    },
-  },
-];
+const DOC_REPOS: Partial<Record<string, string>> = {
+  "context-mode": "https://github.com/mksglu/context-mode",
+  rtk: "https://github.com/rtk-ai/rtk",
+  "understand-anything": "https://github.com/Lum1104/Understand-Anything",
+  gstack: "https://github.com/garrytan/gstack",
+};
 
-export function getAllToolpacks(): Toolpack[] {
-  return TOOLPACKS;
+function installToToolpackFields(
+  install: ToolpackInstallMethod,
+): { repo: string; installMethod: Toolpack["installMethod"]; installCommand: string } {
+  switch (install.type) {
+    case "npm":
+      return {
+        repo: "",
+        installMethod: "npm",
+        installCommand: `npm install -g ${install.package}`,
+      };
+    case "brew":
+      return {
+        repo: "",
+        installMethod: "brew",
+        installCommand: `brew install ${install.formula}`,
+      };
+    case "git-clone":
+      return {
+        repo: install.repo,
+        installMethod: "git-clone",
+        installCommand: install.command ?? `git clone ${install.repo}`,
+      };
+    case "plugin": {
+      const line = install.instructions.trim();
+      return {
+        repo: "",
+        installMethod: "plugin",
+        installCommand: line.startsWith("#") ? line : `# ${line}`,
+      };
+    }
+    default: {
+      const _exhaustive: never = install;
+      return _exhaustive;
+    }
+  }
 }
 
-export function getOptionalToolpacks(): Toolpack[] {
-  return TOOLPACKS.filter((tp) => !tp.required);
+function pluginToToolpack(plugin: ToolpackPlugin): Toolpack {
+  const { repo: installRepo, installMethod, installCommand } = installToToolpackFields(plugin.install);
+  const repo = DOC_REPOS[plugin.id] ?? installRepo;
+  return {
+    id: plugin.id,
+    name: plugin.name,
+    description: plugin.description,
+    category: plugin.category,
+    repo,
+    required: false,
+    installMethod,
+    installCommand,
+    relevantTools: plugin.relevantTools,
+    packSource: plugin.source,
+    packVersion: plugin.version,
+    generateFiles: plugin.generateFiles.bind(plugin),
+  };
 }
 
-export function getToolpack(id: string): Toolpack | undefined {
-  return TOOLPACKS.find((tp) => tp.id === id);
+function loadToolpacks(cwd: string): Toolpack[] {
+  return discoverToolpacks(cwd).map(pluginToToolpack);
 }
 
-export function getToolpacksByCategory(category: ToolpackCategory): Toolpack[] {
-  return TOOLPACKS.filter((tp) => tp.category === category);
+export function getAllToolpacks(cwd: string = process.cwd()): Toolpack[] {
+  return loadToolpacks(cwd);
 }
 
-export function generateToolpackSetupGuide(selectedPacks: string[], tools: ToolId[]): GeneratedFile {
-  const packs = selectedPacks.map((id) => getToolpack(id)).filter(Boolean) as Toolpack[];
+export function getOptionalToolpacks(cwd: string = process.cwd()): Toolpack[] {
+  return loadToolpacks(cwd).filter((tp) => !tp.required);
+}
+
+export function getToolpack(id: string, cwd: string = process.cwd()): Toolpack | undefined {
+  return loadToolpacks(cwd).find((tp) => tp.id === id);
+}
+
+export function getToolpacksByCategory(category: ToolpackCategory, cwd: string = process.cwd()): Toolpack[] {
+  return loadToolpacks(cwd).filter((tp) => tp.category === category);
+}
+
+export function generateToolpackSetupGuide(
+  selectedPacks: string[],
+  tools: ToolId[],
+  cwd: string = process.cwd(),
+): GeneratedFile {
+  const packs = selectedPacks.map((id) => getToolpack(id, cwd)).filter(Boolean) as Toolpack[];
   if (packs.length === 0) {
     return {
       path: ".harness/toolpacks.md",

@@ -23,9 +23,10 @@ export function mergeSkill(
   }
 
   if (strategy === "overwrite") {
+    const v = Math.max(generated.version, existing.version);
     return {
       action: "update",
-      content: serializeSkill(generated),
+      content: serializeSkill({ ...generated, version: v }),
       reason: "Overwrite strategy: always replace",
     };
   }
@@ -61,10 +62,11 @@ export function mergeSkill(
     };
   }
 
+  const nextVersion = Math.max(generated.version, existing.version + 1);
   return {
     action: "update",
-    content: serializeSkill(generated),
-    reason: `${existing.source} skill updated: v${existing.version} → v${generated.version}`,
+    content: serializeSkill({ ...generated, version: nextVersion }),
+    reason: `${existing.source} skill updated: v${existing.version} → v${nextVersion}`,
   };
 }
 

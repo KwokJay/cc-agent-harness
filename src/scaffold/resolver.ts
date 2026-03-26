@@ -113,9 +113,9 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
 
   const selectedPacks = opts.toolpacks ?? [];
   if (selectedPacks.length > 0) {
-    files.push(generateToolpackSetupGuide(selectedPacks, opts.tools));
+    files.push(generateToolpackSetupGuide(selectedPacks, opts.tools, opts.cwd));
     for (const packId of selectedPacks) {
-      const pack = getToolpack(packId);
+      const pack = getToolpack(packId, opts.cwd);
       if (pack) {
         files.push(...pack.generateFiles(opts.tools, opts.projectName, opts.cwd));
       }
@@ -233,6 +233,7 @@ function generateSkillFiles(projectType: ProjectTypeId): GeneratedFile[] {
       path: `.harness/skills/${skill.name}/SKILL.md`,
       content: skillMd,
       description: `Preset skill (source): ${skill.name}`,
+      harnessSkillSource: "preset",
     },
   ];
 }

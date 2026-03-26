@@ -11,6 +11,7 @@ export { diffPlan, type DiffResult } from "./scaffold/differ.js";
 export { parseSkillFile, serializeSkill, hashBody, type ParsedSkill, type SkillSource } from "./skill-extraction/parser.js";
 export { mergeSkill, type MergeStrategy, type MergeDecision } from "./skill-extraction/merger.js";
 export { validateConfig, type HarnessConfig, type ValidationResult } from "./config/schema.js";
+export { runVerify, type VerifyOptions } from "./cli/verify.js";
 export { discoverToolpacks } from "./toolpacks/discovery.js";
 export { type ToolpackPlugin, type ToolpackInstallMethod } from "./toolpacks/plugin.js";
 export { buildAgentsMd, type AgentsMdOptions } from "./scaffold/agents-md-builder.js";

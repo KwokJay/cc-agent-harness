@@ -73,7 +73,7 @@ export async function runInit(opts: InitOptions): Promise<void> {
       required: true,
     });
 
-    const allPacks = getOptionalToolpacks();
+    const allPacks = getOptionalToolpacks(cwd);
     if (allPacks.length > 0) {
       toolpacks = await inquirer.checkbox({
         message: "Optional toolpacks (press enter to skip):",
@@ -135,7 +135,10 @@ export async function runInit(opts: InitOptions): Promise<void> {
   console.log(`  Files:    ${plan.files.length} to generate`);
   console.log("");
 
-  const result = await generateFiles(cwd, plan.files, { overwrite: opts.overwrite });
+  const result = await generateFiles(cwd, plan.files, {
+    overwrite: opts.overwrite,
+    mergeStrategy: opts.overwrite ? "overwrite" : "keep-manual",
+  });
 
   if (result.created.length > 0) {
     console.log("  Created:");

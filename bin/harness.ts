@@ -7,7 +7,7 @@ program
   .description(
     "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   )
-  .version("0.2.0");
+  .version("0.4.0");
 
 program
   .command("init")
@@ -27,9 +27,18 @@ program
   .command("doctor")
   .description("Check health of the harness setup")
   .option("--json", "Output machine-readable JSON")
+  .option("--verify", "After checks, run configured verification commands (workflows.verification.checks)")
   .action(async (opts) => {
     const { runDoctor } = await import("../src/cli/doctor.js");
     await runDoctor(opts);
+  });
+
+program
+  .command("verify")
+  .description("Run project verification commands from .harness/config.yaml")
+  .action(async () => {
+    const { runVerifyCli } = await import("../src/cli/verify.js");
+    await runVerifyCli();
   });
 
 program
@@ -73,7 +82,7 @@ program
           "engineering-support": "Engineering Support",
           "init-enhancement": "Initialization Enhancement",
         };
-        const packs = getOptionalToolpacks();
+        const packs = getOptionalToolpacks(process.cwd());
         let lastCategory = "";
         for (const pack of packs) {
           if (pack.category !== lastCategory) {
@@ -81,7 +90,8 @@ program
             console.log(`  [${categoryLabels[pack.category] ?? pack.category}]`);
             lastCategory = pack.category;
           }
-          console.log(`    ${pack.id.padEnd(24)} ${pack.description}`);
+          const meta = `source=${pack.packSource} version=${pack.packVersion}`;
+          console.log(`    ${pack.id.padEnd(20)} ${meta.padEnd(36)} ${pack.description}`);
         }
         break;
       }

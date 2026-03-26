@@ -81,17 +81,38 @@ describe("serializeSkill", () => {
     expect(reparsed.body).toBe(parsed.body);
   });
 
-  it("omits optional fields when not present", () => {
+  it("omits optional fields when not present but always writes body_hash", () => {
     const serialized = serializeSkill({
       name: "test",
       description: "desc",
       version: 1,
       source: "preset",
       body: "content",
-      bodyHash: "abc",
+      bodyHash: hashBody("content"),
     });
     expect(serialized).not.toContain("generated_at");
     expect(serialized).not.toContain("harness_version");
+    expect(serialized).toContain("body_hash:");
+    expect(serialized).toContain(hashBody("content"));
+  });
+
+  it("reads body_hash from frontmatter for stale-hash detection", () => {
+    const oldHash = hashBody("original body");
+    const content = [
+      "---",
+      "name: x",
+      "description: d",
+      "version: 1",
+      "source: static-analysis",
+      `body_hash: ${oldHash}`,
+      "---",
+      "",
+      "user edited body",
+    ].join("\n");
+    const result = parseSkillFile(content);
+    expect(result.bodyHash).toBe(oldHash);
+    expect(result.body).toBe("user edited body");
+    expect(hashBody(result.body)).not.toBe(oldHash);
   });
 });
 

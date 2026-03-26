@@ -6,15 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-03-26
+
 ### Added
-- `pnpm verify` / `pnpm agent-review`: single gate running lint, test, and build; `prepublishOnly` now uses this gate
-- `CONTRIBUTING.md` and Cursor rule `.cursor/rules/agent-review-and-verify.mdc` documenting mandatory agent self-review + verify before task completion
-- CI runs `pnpm agent-review` as one step (same as local gate)
-- `PHASE3_PLAN.md` and `PHASE4_PLAN.md` roadmap documents; `PHASE2_PLAN.md` cross-links all phases
+
+- **`verify` CLI**: reads `.harness/config.yaml`, validates schema, then runs `workflows.verification.checks` in order using `workflows.commands` entries (`spawnSync` with `shell: true`, `stdio: inherit`).
+- **`doctor --verify`**: after a passing doctor run (no fail-level checks), runs the same verification pipeline as `verify`.
+- **`update --dry-run`**: when `generated_files` is present in config, prints paths that would drop out of the harness plan (via `diffPlan` `removed`).
+- **Toolpack registry**: built from `discoverToolpacks(cwd)`; `list toolpacks` shows `source` (builtin/local) and `version`.
+- **Skill merge + `body_hash`**: harness `SKILL.md` files merge on write; `body_hash` persisted for manual-edit detection (Phase 2).
+- **Templates**: `PROJECT-ANALYSIS.md`, `INDEX.md`, and `EXTRACTION-TASK.md` bodies live under `src/templates/skills/` with snapshot tests.
+- **E2E**: `tests/e2e/cli-smoke.test.ts` (requires `pnpm build`); `vitest.e2e.config.ts`.
+- **Coverage**: `@vitest/coverage-v8`; `pnpm test:coverage` enforces thresholds from `vitest.config.ts`.
+
+### Changed
+
+- **`pnpm agent-review`**: `pnpm lint && pnpm test:coverage && pnpm build && pnpm test:e2e`.
+- **`pnpm verify`**: `pnpm lint && pnpm test && pnpm build && pnpm test:e2e` (unit tests exclude e2e; e2e runs separately).
+- **`ToolpackCategory`** moved to `src/toolpacks/categories.ts` to avoid circular imports.
 
 ## [0.2.0] - 2026-03-26
 
 ### Added
+
+- `pnpm verify` / `pnpm agent-review`: single gate running lint, test, and build; `prepublishOnly` now uses this gate
+- `CONTRIBUTING.md` and Cursor rule `.cursor/rules/agent-review-and-verify.mdc` documenting mandatory agent self-review + verify before task completion
+- CI runs `pnpm agent-review` as one step (same as local gate)
+- `PHASE3_PLAN.md` and `PHASE4_PLAN.md` roadmap documents; `PHASE2_PLAN.md` cross-links all phases
 - Complete rewrite as a harness scaffold tool
 - Interactive init flow with step-by-step prompts (project type, AI tools, toolpacks)
 - Non-interactive mode via CLI parameters for CI/automation
@@ -34,16 +52,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - update command to refresh generated files
 
 ### Changed
+
 - Renamed from "project configuration tool" to "harness scaffold tool"
 - Skills now use each tool's documented native directory format
 - Documentation and changelog constraints are injected into AGENTS.md and each tool's rule files
 
 ### Notes
+
 - This is a breaking change from 0.0.1. The entire API and CLI have been rewritten.
 
 ## [0.0.1] - 2026-03-25
 
 ### Added
+
 - Initial release as project configuration management tool
 - Basic CLI with setup, doctor, verify, run, context build commands
 - HarnessRuntime for unified configuration and task resolution

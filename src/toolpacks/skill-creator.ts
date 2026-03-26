@@ -6,6 +6,7 @@ export function generateSkillCreatorFiles(): GeneratedFile[] {
       path: ".harness/skills/skill-creator/SKILL.md",
       content: SKILL_CREATOR_MD,
       description: "Skill Creator: meta-skill for creating and iterating project skills",
+      harnessSkillSource: "preset",
     },
   ];
 }

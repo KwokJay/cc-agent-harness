@@ -6,6 +6,8 @@ import { validateConfig } from "../config/schema.js";
 
 export interface DoctorOptions {
   json?: boolean;
+  /** Run `agent-harness verify` after schema-valid config checks. */
+  verify?: boolean;
 }
 
 interface CheckResult {
@@ -46,6 +48,7 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<void> {
 
     if (tools && Array.isArray(tools) && skills.length > 0) {
       results.push(...checkSkillDistribution(cwd, tools, skills));
+      results.push(...checkManualSkillDistribution(cwd, tools, skills));
     }
 
     results.push(...checkSkillVersioning(cwd, skills));
@@ -72,6 +75,16 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<void> {
   }
 
   if (summary.fail > 0) process.exitCode = 1;
+
+  if (opts.verify && !opts.json && summary.fail === 0 && rawConfig) {
+    const validation = validateConfig(rawConfig);
+    if (validation.valid) {
+      console.log("\n--- Verification (doctor --verify) ---\n");
+      const { runVerify } = await import("./verify.js");
+      const ok = runVerify({ cwd, quiet: false });
+      if (!ok) process.exitCode = 1;
+    }
+  }
 }
 
 export async function runLightDoctor(): Promise<{ pass: number; warn: number; fail: number }> {
@@ -175,6 +188,47 @@ function getSkillPath(tool: string, skillName: string): string {
     augment: (n) => `.augment/skills/${n}/SKILL.md`,
   };
   return pathMap[tool]?.(skillName) ?? "";
+}
+
+function checkManualSkillDistribution(
+  cwd: string,
+  tools: string[],
+  skills: string[],
+): CheckResult[] {
+  const skillsDir = resolve(cwd, ".harness/skills");
+  const results: CheckResult[] = [];
+
+  for (const skill of skills) {
+    if (META_SKILLS.has(skill)) continue;
+    const skillPath = resolve(skillsDir, skill, "SKILL.md");
+    if (!existsSync(skillPath)) continue;
+
+    let parsed;
+    try {
+      parsed = parseSkillFile(readFileSync(skillPath, "utf-8"));
+    } catch {
+      continue;
+    }
+    if (parsed.source !== "manual") continue;
+
+    const missingTools: string[] = [];
+    for (const tool of tools) {
+      const p = getSkillPath(tool, skill);
+      if (!p || !existsSync(resolve(cwd, p))) {
+        missingTools.push(tool);
+      }
+    }
+
+    if (missingTools.length > 0) {
+      results.push({
+        name: `skill-source-${skill}`,
+        status: "warn",
+        message: `Manual skill "${skill}" missing in tool path(s): ${missingTools.join(", ")}`,
+      });
+    }
+  }
+
+  return results;
 }
 
 function checkSkillVersioning(cwd: string, skills: string[]): CheckResult[] {

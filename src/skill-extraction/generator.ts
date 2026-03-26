@@ -10,6 +10,7 @@ export function generateSkillExtractionGuide(
       path: ".harness/skills/project-skill-extractor/SKILL.md",
       content: extractorSkillMd(projectName, project),
       description: "Skill: automated project skill extraction guide",
+      harnessSkillSource: "preset",
     },
   ];
 }

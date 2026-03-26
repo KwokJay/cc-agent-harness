@@ -11,6 +11,8 @@ export const gstackPlugin: ToolpackPlugin = {
   install: {
     type: "git-clone",
     repo: "https://github.com/garrytan/gstack.git",
+    command:
+      "git clone https://github.com/garrytan/gstack.git .claude/skills/gstack && cd .claude/skills/gstack && ./setup",
   },
   relevantTools: ["claude-code", "codex"],
   generateFiles(tools) {

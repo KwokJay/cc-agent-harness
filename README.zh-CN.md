@@ -83,10 +83,13 @@ agent-harness init                     # 交互式初始化
 agent-harness init -p backend -t cursor,claude-code  # 非交互式
 agent-harness doctor                   # 检查 harness 健康状态
 agent-harness doctor --json            # 机器可读输出
+agent-harness doctor --verify          # Doctor 通过后执行配置中的验证命令
+agent-harness verify                   # 按 config 运行 workflows.verification.checks
 agent-harness update                   # 刷新生成的文件
+agent-harness update --dry-run         # 预览；对比 generated_files 列出不再纳入计划的文件
 agent-harness list tools               # 列出支持的 AI 工具
 agent-harness list projects            # 列出支持的项目类型
-agent-harness list toolpacks           # 列出可选工具包
+agent-harness list toolpacks           # 可选工具包（含 source、version）
 ```
 
 ## 可选工具包
@@ -105,7 +108,7 @@ agent-harness list toolpacks           # 列出可选工具包
 
 ## 开发
 
-改动结束前请执行 `pnpm agent-review`（lint + test + build）。详见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+改动结束前请执行 `pnpm agent-review`（lint + 覆盖率测试 + build + E2E）。详见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
 ### 路线图
 

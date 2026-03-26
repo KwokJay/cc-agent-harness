@@ -16,6 +16,11 @@ export interface ParsedSkill {
 export function parseSkillFile(content: string): ParsedSkill {
   const { frontmatter, body } = splitFrontmatter(content);
 
+  const storedHash =
+    typeof frontmatter.body_hash === "string" && frontmatter.body_hash.length > 0
+      ? frontmatter.body_hash
+      : undefined;
+
   return {
     name: (frontmatter.name as string) ?? "unknown",
     description: (frontmatter.description as string) ?? "",
@@ -24,7 +29,7 @@ export function parseSkillFile(content: string): ParsedSkill {
     generatedAt: frontmatter.generated_at as string | undefined,
     harnessVersion: frontmatter.harness_version as string | undefined,
     body,
-    bodyHash: hashBody(body),
+    bodyHash: storedHash ?? hashBody(body),
   };
 }
 
@@ -43,6 +48,8 @@ export function serializeSkill(skill: ParsedSkill): string {
   if (skill.harnessVersion) {
     lines.push(`harness_version: ${skill.harnessVersion}`);
   }
+
+  lines.push(`body_hash: ${hashBody(skill.body)}`);
 
   lines.push("---", "", skill.body, "");
 

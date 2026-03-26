@@ -83,10 +83,13 @@ agent-harness init                     # Interactive initialization
 agent-harness init -p backend -t cursor,claude-code  # Non-interactive
 agent-harness doctor                   # Check harness health
 agent-harness doctor --json            # Machine-readable output
+agent-harness doctor --verify          # Doctor, then run workflows.verification.checks
+agent-harness verify                   # Run verification commands from config
 agent-harness update                   # Refresh generated files
+agent-harness update --dry-run         # Preview; lists paths removed from plan vs generated_files
 agent-harness list tools               # List supported AI tools
 agent-harness list projects            # List supported project types
-agent-harness list toolpacks           # List optional toolpacks
+agent-harness list toolpacks           # Optional toolpacks (id, source, version)
 ```
 
 ## Optional Toolpacks
@@ -109,7 +112,7 @@ agent-harness init --toolpacks context-mode,rtk
 
 ## Development
 
-Before finishing a change, run `pnpm agent-review` (lint + test + build). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+Before finishing a change, run `pnpm agent-review` (lint + test with coverage + build + E2E). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Roadmap
 

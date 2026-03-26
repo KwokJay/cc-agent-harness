@@ -78,6 +78,7 @@ export function generateChangelog(cwd: string, projectName: string): GeneratedFi
     path: ".harness/skills/changelog-governance/SKILL.md",
     content: changelogGovernanceSkill(projectName),
     description: "Skill: changelog maintenance governance",
+    harnessSkillSource: "preset",
   });
 
   return files;

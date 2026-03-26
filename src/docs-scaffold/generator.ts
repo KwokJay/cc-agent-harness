@@ -44,6 +44,7 @@ export function generateDocsConstraintRule(projectName: string): GeneratedFile {
     path: ".harness/skills/docs-governance/SKILL.md",
     content: docsGovernanceSkill(projectName),
     description: "Skill: documentation governance constraints",
+    harnessSkillSource: "preset",
   };
 }
 
