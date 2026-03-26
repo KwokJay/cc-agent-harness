@@ -22,7 +22,6 @@ export function getDocsConstraintParagraph(): string {
     "- `design/` - UX/interaction design and wireframes",
     "- `architecture/` - technical design and API contracts",
     "- `testing/` - test plans and test cases",
-    "- `changelog/` - change records",
     "- `releases/` - version release notes",
     "",
     "When creating documentation, first create the feature directory if it does not exist, then place the document in the correct type subdirectory. Use lowercase-hyphenated names. Do NOT create documentation files outside `.harness/docs/`.",
@@ -51,7 +50,6 @@ All project documentation MUST be organized under \`.harness/docs/\` by feature:
     design/              UX, interaction design, wireframes, design decisions
     architecture/        technical design, API contracts, data models
     testing/             test plans, test cases, testing strategies
-    changelog/           change records by date or version
     releases/            version release notes
     README.md            feature overview and document index
 \`\`\`
