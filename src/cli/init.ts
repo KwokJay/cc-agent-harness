@@ -10,6 +10,8 @@ export interface InitOptions {
   project?: string;
   tools?: string;
   name?: string;
+  toolpacks?: string;
+  skipDocs?: boolean;
   overwrite?: boolean;
 }
 
@@ -22,10 +24,15 @@ export async function runInit(opts: InitOptions): Promise<void> {
 
   const projectType = resolveProjectType(opts.project, cwd);
   const tools = resolveTools(opts.tools);
+  const toolpacks = opts.toolpacks
+    ? opts.toolpacks.split(",").map((t) => t.trim())
+    : [];
 
-  console.log(`  Project:  ${projectName}`);
-  console.log(`  Type:     ${projectType}`);
-  console.log(`  Tools:    ${tools.join(", ")}`);
+  console.log(`  Project:    ${projectName}`);
+  console.log(`  Type:       ${projectType}`);
+  console.log(`  Tools:      ${tools.join(", ")}`);
+  console.log(`  Toolpacks:  ${toolpacks.length > 0 ? toolpacks.join(", ") : "(none)"}`);
+  console.log(`  Docs:       ${opts.skipDocs ? "skipped" : "included"}`);
   console.log("");
 
   const plan = resolve({
@@ -33,6 +40,8 @@ export async function runInit(opts: InitOptions): Promise<void> {
     projectName,
     projectType,
     tools,
+    toolpacks,
+    skipDocs: opts.skipDocs,
   });
 
   console.log(`  Detected: ${plan.project.type} (${plan.project.language}${plan.project.framework ? ` / ${plan.project.framework}` : ""})`);

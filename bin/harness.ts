@@ -15,6 +15,8 @@ program
   .option("-p, --project <type>", "Project type (frontend|backend|fullstack|monorepo|docs)")
   .option("-t, --tools <tools>", "AI tools, comma-separated (cursor,claude-code,copilot,codex,opencode)", "cursor,claude-code")
   .option("-n, --name <name>", "Project name (defaults to directory name)")
+  .option("--toolpacks <packs>", "Optional toolpacks, comma-separated (context-mode,rtk,understand-anything,gstack)")
+  .option("--skip-docs", "Skip generating docs/ directory structure")
   .option("--overwrite", "Overwrite existing files")
   .action(async (opts) => {
     const { runInit } = await import("../src/cli/init.js");
@@ -60,9 +62,30 @@ program
         }
         break;
       }
+      case "toolpacks": {
+        const { getOptionalToolpacks } = await import("../src/toolpacks/registry.js");
+        console.log("Optional toolpacks:\n");
+        const categoryLabels: Record<string, string> = {
+          "context-engineering": "Context Engineering",
+          analysis: "Analysis",
+          "engineering-support": "Engineering Support",
+          "init-enhancement": "Initialization Enhancement",
+        };
+        const packs = getOptionalToolpacks();
+        let lastCategory = "";
+        for (const pack of packs) {
+          if (pack.category !== lastCategory) {
+            if (lastCategory) console.log("");
+            console.log(`  [${categoryLabels[pack.category] ?? pack.category}]`);
+            lastCategory = pack.category;
+          }
+          console.log(`    ${pack.id.padEnd(24)} ${pack.description}`);
+        }
+        break;
+      }
       default:
         console.error(`Unknown resource: ${resource}`);
-        console.error("Available: tools, projects");
+        console.error("Available: tools, projects, toolpacks");
         process.exitCode = 1;
     }
   });

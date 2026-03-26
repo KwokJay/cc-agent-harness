@@ -9,3 +9,8 @@ export { generateFiles, type GenerateResult } from "./scaffold/generator.js";
 export { buildAgentsMd, type AgentsMdOptions } from "./scaffold/agents-md-builder.js";
 
 export { render, type TemplateContext } from "./template/engine.js";
+
+export { getAllToolpacks, getOptionalToolpacks, getToolpack, type Toolpack, type ToolpackCategory } from "./toolpacks/registry.js";
+export { generateSkillCreatorFiles } from "./toolpacks/skill-creator.js";
+export { generateDocsDirectory, generateDocsConstraintRule } from "./docs-scaffold/generator.js";
+export { generateSkillExtractionGuide } from "./skill-extraction/generator.js";

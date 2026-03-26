@@ -3,6 +3,10 @@ import type { ToolId, ToolAdapterContext, GeneratedFile, SkillContent } from "..
 import { getProjectAdapter, detectProjectType } from "../project-types/index.js";
 import { getToolAdapter } from "../tool-adapters/index.js";
 import { buildAgentsMd } from "./agents-md-builder.js";
+import { generateSkillCreatorFiles } from "../toolpacks/skill-creator.js";
+import { generateToolpackSetupGuide, getToolpack } from "../toolpacks/registry.js";
+import { generateDocsDirectory, generateDocsConstraintRule } from "../docs-scaffold/generator.js";
+import { generateSkillExtractionGuide } from "../skill-extraction/generator.js";
 
 export interface ResolveOptions {
   cwd: string;
@@ -10,6 +14,8 @@ export interface ResolveOptions {
   projectType?: ProjectTypeId;
   tools: ToolId[];
   extraRules?: string[];
+  toolpacks?: string[];
+  skipDocs?: boolean;
 }
 
 export interface ResolvedPlan {
@@ -76,6 +82,26 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
 
   files.push(...generateHarnessFiles(opts, project, commands, verificationChecks, customRules));
   files.push(...generateSkillFiles(project.type));
+
+  files.push(...generateSkillCreatorFiles());
+
+  files.push(...generateSkillExtractionGuide(opts.projectName, project));
+
+  if (!opts.skipDocs) {
+    files.push(...generateDocsDirectory(opts.projectName, project.type));
+    files.push(generateDocsConstraintRule(opts.projectName));
+  }
+
+  const selectedPacks = opts.toolpacks ?? [];
+  if (selectedPacks.length > 0) {
+    files.push(generateToolpackSetupGuide(selectedPacks, opts.tools));
+    for (const packId of selectedPacks) {
+      const pack = getToolpack(packId);
+      if (pack) {
+        files.push(...pack.generateFiles(opts.tools, opts.projectName));
+      }
+    }
+  }
 
   return { project, tools: opts.tools, commands, verificationChecks, customRules, skills, files };
 }
