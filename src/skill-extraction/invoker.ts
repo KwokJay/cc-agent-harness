@@ -1,53 +1,56 @@
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import type { ToolId } from "../tool-adapters/types.js";
 
 const TOOL_PRIORITY: ToolId[] = ["claude-code", "codex", "cursor", "copilot", "opencode"];
 
 interface InvokeResult {
-  tool: ToolId;
+  tool: ToolId | null;
   success: boolean;
   output: string;
-}
-
-export function selectExtractionTool(userTools: ToolId[]): ToolId | null {
-  for (const tool of TOOL_PRIORITY) {
-    if (userTools.includes(tool)) return tool;
-  }
-  return null;
+  skipped: { tool: ToolId; reason: string }[];
 }
 
 export function invokeSkillExtraction(
   cwd: string,
-  tool: ToolId,
+  userTools: ToolId[],
 ): InvokeResult {
-  const command = buildExtractionCommand(tool);
-  if (!command) {
-    return { tool, success: false, output: `No extraction command available for ${tool}` };
+  const skipped: { tool: ToolId; reason: string }[] = [];
+
+  for (const tool of TOOL_PRIORITY) {
+    if (!userTools.includes(tool)) continue;
+
+    const command = buildExtractionCommand(tool);
+    if (!command) {
+      skipped.push({ tool, reason: "no CLI extraction command available" });
+      continue;
+    }
+
+    if (!isToolInstalled(tool)) {
+      skipped.push({ tool, reason: `CLI not found in PATH (expected: ${getBinName(tool)})` });
+      continue;
+    }
+
+    console.log(`  Invoking ${tool} for skill extraction...`);
+    console.log(`  Command: ${command}`);
+    console.log("");
+
+    try {
+      const output = execSync(command, {
+        cwd,
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: 300_000,
+        env: { ...process.env, FORCE_COLOR: "0" },
+      }).toString();
+
+      return { tool, success: true, output, skipped };
+    } catch (err) {
+      const execErr = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
+      const output = execErr.stderr?.toString() ?? execErr.stdout?.toString() ?? execErr.message ?? "Unknown error";
+      return { tool, success: false, output, skipped };
+    }
   }
 
-  if (!isToolAvailable(tool)) {
-    return { tool, success: false, output: `${tool} CLI not found in PATH. Install it first, then run: ${command}` };
-  }
-
-  console.log(`  Invoking ${tool} for skill extraction...`);
-  console.log(`  Command: ${command}`);
-  console.log("");
-
-  try {
-    const output = execSync(command, {
-      cwd,
-      stdio: ["pipe", "pipe", "pipe"],
-      timeout: 300_000,
-      env: { ...process.env, FORCE_COLOR: "0" },
-    }).toString();
-
-    return { tool, success: true, output };
-  } catch (err) {
-    const execErr = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
-    const output = execErr.stderr?.toString() ?? execErr.stdout?.toString() ?? execErr.message ?? "Unknown error";
-    return { tool, success: false, output };
-  }
+  return { tool: null, success: false, output: "No usable AI tool found for skill extraction", skipped };
 }
 
 function buildExtractionCommand(tool: ToolId): string | null {
@@ -63,11 +66,9 @@ function buildExtractionCommand(tool: ToolId): string | null {
     case "claude-code":
       return `claude -p "${prompt}"`;
     case "codex":
-      return `codex -q "${prompt}"`;
+      return `codex exec "${prompt}"`;
     case "cursor":
-      return null;
     case "copilot":
-      return null;
     case "opencode":
       return null;
     default:
@@ -75,16 +76,8 @@ function buildExtractionCommand(tool: ToolId): string | null {
   }
 }
 
-function isToolAvailable(tool: ToolId): boolean {
-  const binMap: Record<string, string> = {
-    "claude-code": "claude",
-    codex: "codex",
-    cursor: "cursor",
-    copilot: "gh",
-    opencode: "opencode",
-  };
-
-  const bin = binMap[tool];
+function isToolInstalled(tool: ToolId): boolean {
+  const bin = getBinName(tool);
   if (!bin) return false;
 
   try {
@@ -93,4 +86,15 @@ function isToolAvailable(tool: ToolId): boolean {
   } catch {
     return false;
   }
+}
+
+function getBinName(tool: ToolId): string | null {
+  const map: Record<string, string> = {
+    "claude-code": "claude",
+    codex: "codex",
+    cursor: "cursor",
+    copilot: "gh",
+    opencode: "opencode",
+  };
+  return map[tool] ?? null;
 }
