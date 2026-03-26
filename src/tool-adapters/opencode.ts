@@ -1,25 +1,41 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile } from "./types.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
 
 export class OpenCodeAdapter implements ToolAdapter {
   id = "opencode" as const;
   label = "OpenCode";
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
-    return [this.configJson(ctx)];
+    const files: GeneratedFile[] = [this.configJson(ctx)];
+
+    for (const skill of ctx.skillContents) {
+      files.push(this.skillFile(skill));
+    }
+
+    return files;
+  }
+
+  private skillFile(skill: SkillContent): GeneratedFile {
+    const content = [
+      `---`,
+      `name: ${skill.name}`,
+      `description: ${skill.description}`,
+      `---`,
+      ``,
+      skill.body,
+      ``,
+    ].join("\n");
+
+    return {
+      path: `.opencode/skills/${skill.name}/SKILL.md`,
+      content,
+      description: `OpenCode skill: ${skill.name}`,
+    };
   }
 
   private configJson(ctx: ToolAdapterContext): GeneratedFile {
     const config: Record<string, unknown> = {
       $schema: "https://opencode.ai/config-schema.json",
     };
-
-    const instructions: string[] = [];
-    if (ctx.skills.length > 0) {
-      instructions.push(...ctx.skills.map((s) => `.harness/skills/${s}/SKILL.md`));
-    }
-    if (instructions.length > 0) {
-      config.instructions = instructions;
-    }
 
     return {
       path: "opencode.json",

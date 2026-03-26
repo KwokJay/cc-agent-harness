@@ -1,4 +1,4 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile } from "./types.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
 
 export class CopilotAdapter implements ToolAdapter {
   id = "copilot" as const;
@@ -6,14 +6,29 @@ export class CopilotAdapter implements ToolAdapter {
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [this.instructions(ctx)];
+
     for (const skill of ctx.skillContents) {
-      files.push({
-        path: `.github/instructions/skill-${skill.name}.instructions.md`,
-        content: `---\napplyTo: "**"\n---\n\n${skill.body}\n`,
-        description: `Copilot skill instruction: ${skill.name}`,
-      });
+      files.push(this.skillInstruction(skill));
     }
+
     return files;
+  }
+
+  private skillInstruction(skill: SkillContent): GeneratedFile {
+    const lines = [
+      `---`,
+      `applyTo: "**"`,
+      `---`,
+      ``,
+      skill.body,
+      ``,
+    ];
+
+    return {
+      path: `.github/instructions/${skill.name}.instructions.md`,
+      content: lines.join("\n"),
+      description: `Copilot path instruction: ${skill.name}`,
+    };
   }
 
   private instructions(ctx: ToolAdapterContext): GeneratedFile {

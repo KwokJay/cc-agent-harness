@@ -1,4 +1,4 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile } from "./types.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 
@@ -14,14 +14,28 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     }
 
     for (const skill of ctx.skillContents) {
-      files.push({
-        path: `.claude/rules/skill-${skill.name}.md`,
-        content: `---\npaths: "**"\n---\n\n${skill.body}\n`,
-        description: `Claude Code skill rule: ${skill.name}`,
-      });
+      files.push(this.skillFile(skill));
     }
 
     return files;
+  }
+
+  private skillFile(skill: SkillContent): GeneratedFile {
+    const content = [
+      `---`,
+      `name: ${skill.name}`,
+      `description: ${skill.description}`,
+      `---`,
+      ``,
+      skill.body,
+      ``,
+    ].join("\n");
+
+    return {
+      path: `.claude/skills/${skill.name}/SKILL.md`,
+      content,
+      description: `Claude Code skill: ${skill.name}`,
+    };
   }
 
   private claudeMd(ctx: ToolAdapterContext): GeneratedFile {
