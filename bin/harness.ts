@@ -13,7 +13,7 @@ program
   .command("init")
   .description("Initialize harness for the current project")
   .option("-p, --project <type>", "Project type (frontend|backend|fullstack|monorepo|docs)")
-  .option("-t, --tools <tools>", "AI tools, comma-separated (cursor,claude-code,copilot,codex,opencode)", "cursor,claude-code")
+  .option("-t, --tools <tools>", "AI tools, comma-separated (cursor,claude-code,copilot,codex,opencode)")
   .option("-n, --name <name>", "Project name (defaults to directory name)")
   .option("--toolpacks <packs>", "Optional toolpacks, comma-separated (context-mode,rtk,understand-anything,gstack)")
   .option("--skip-docs", "Skip generating docs/ directory structure")
@@ -36,6 +36,8 @@ program
   .command("update")
   .description("Refresh generated harness files from current config")
   .option("--overwrite", "Force overwrite all files")
+  .option("--dry-run", "Preview changes without writing files")
+  .option("--full", "Force full regeneration (default: incremental)")
   .action(async (opts) => {
     const { runUpdate } = await import("../src/cli/update.js");
     await runUpdate(opts);
@@ -43,7 +45,7 @@ program
 
 program
   .command("list <resource>")
-  .description("List supported resources (tools|projects)")
+  .description("List supported resources (tools|projects|toolpacks)")
   .action(async (resource: string) => {
     switch (resource) {
       case "tools": {

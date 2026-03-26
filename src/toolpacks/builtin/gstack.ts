@@ -1,0 +1,27 @@
+import type { ToolpackPlugin } from "../plugin.js";
+import type { GeneratedFile } from "../../tool-adapters/types.js";
+
+export const gstackPlugin: ToolpackPlugin = {
+  id: "gstack",
+  name: "gstack",
+  description: "Skills suite that turns Claude Code into a virtual engineering team with QA, review, shipping workflows",
+  category: "engineering-support",
+  version: "1.0.0",
+  source: "builtin",
+  install: {
+    type: "git-clone",
+    repo: "https://github.com/garrytan/gstack.git",
+  },
+  relevantTools: ["claude-code", "codex"],
+  generateFiles(tools) {
+    const files: GeneratedFile[] = [];
+    if (tools.includes("claude-code")) {
+      files.push({
+        path: ".claude/skills/gstack/.gitkeep",
+        content: "# Run: git clone https://github.com/garrytan/gstack.git .claude/skills/gstack && cd .claude/skills/gstack && ./setup\n",
+        description: "gstack placeholder (requires manual clone + setup)",
+      });
+    }
+    return files;
+  },
+};

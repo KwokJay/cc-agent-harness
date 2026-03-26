@@ -107,6 +107,10 @@ agent-harness init --toolpacks context-mode,rtk
 - npm package: `cc-agent-harness`
 - CLI command: `agent-harness`
 
+## Development
+
+Before finishing a change, run `pnpm agent-review` (lint + test + build). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## License
 
 Licensed under the [MIT License](./LICENSE).

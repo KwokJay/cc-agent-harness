@@ -9,6 +9,7 @@ import { generateDocsDirectory, generateDocsConstraintRule } from "../docs-scaff
 import { generateSkillExtractionGuide } from "../skill-extraction/generator.js";
 import { analyzeProject } from "../skill-extraction/analyzer.js";
 import { generateChangelog } from "../changelog/generator.js";
+import { stringify as yamlStringify } from "yaml";
 
 export interface ResolveOptions {
   cwd: string;
@@ -46,7 +47,12 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     ...adapter.defaultCustomRules(),
     ...(opts.extraRules ?? []),
   ];
-  const skills = getDefaultSkills(project.type);
+  const presetSkills = getDefaultSkills(project.type);
+
+  const analysis = analyzeProject(opts.cwd, project, opts.projectName);
+  const extractedSkillNames = analysis.skills.map((s) => s.name);
+  const skills = [...presetSkills, ...extractedSkillNames];
+
   const agentsMdContent = buildAgentsMd({
     projectName: opts.projectName,
     project,
@@ -64,11 +70,9 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     description: "Cross-tool AI agent instructions",
   });
 
-  const presetSkillContents = getSkillContents(project.type);
-
-  const analysis = analyzeProject(opts.cwd, project, opts.projectName);
   files.push(...analysis.files);
 
+  const presetSkillContents = getSkillContents(project.type);
   const extractedSkillContents: SkillContent[] = analysis.skills.map((s) => ({
     name: s.name,
     description: s.description,
@@ -113,9 +117,20 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     for (const packId of selectedPacks) {
       const pack = getToolpack(packId);
       if (pack) {
-        files.push(...pack.generateFiles(opts.tools, opts.projectName));
+        files.push(...pack.generateFiles(opts.tools, opts.projectName, opts.cwd));
       }
     }
+  }
+
+  const allPaths = files.map((f) => f.path);
+  const configIdx = files.findIndex((f) => f.path === ".harness/config.yaml");
+  if (configIdx !== -1) {
+    const existingConfig = files[configIdx].content;
+    const pathsList = yamlStringify({ generated_files: allPaths });
+    files[configIdx] = {
+      ...files[configIdx],
+      content: existingConfig + "\n" + pathsList,
+    };
   }
 
   return { project, tools: opts.tools, commands, verificationChecks, customRules, skills, files };
@@ -139,33 +154,36 @@ function generateHarnessFiles(
   checks: string[],
   rules: string[],
 ): GeneratedFile[] {
-  const config = [
-    `project:`,
-    `  name: "${opts.projectName}"`,
-    `  type: ${project.type}`,
-    `  language: ${project.language}`,
-    project.framework ? `  framework: ${project.framework}` : null,
-    ``,
-    `tools:`,
-    ...opts.tools.map((t) => `  - ${t}`),
-    ``,
-    `workflows:`,
-    `  commands:`,
-    ...Object.entries(commands).map(([k, v]) => `    ${k}: "${v}"`),
-    `  verification:`,
-    `    checks: [${checks.map((c) => `"${c}"`).join(", ")}]`,
-    ``,
-    `custom_rules:`,
-    ...rules.map((r) => `  - "${r}"`),
-  ]
-    .filter((line) => line !== null)
-    .join("\n");
+  const configObj: Record<string, unknown> = {
+    project: {
+      name: opts.projectName,
+      type: project.type,
+      language: project.language,
+      ...(project.framework ? { framework: project.framework } : {}),
+    },
+    tools: opts.tools,
+    workflows: {
+      commands,
+      verification: { checks },
+    },
+    custom_rules: rules,
+  };
+
+  const selectedPacks = opts.toolpacks ?? [];
+  if (selectedPacks.length > 0) {
+    configObj.toolpacks = selectedPacks;
+  }
+
+  if (opts.skipDocs) {
+    configObj.skip_docs = true;
+  }
 
   return [
     {
       path: ".harness/config.yaml",
-      content: config + "\n",
+      content: yamlStringify(configObj),
       description: "Harness scaffold configuration",
+      source: "harness-config" as const,
     },
   ];
 }

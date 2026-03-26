@@ -103,6 +103,10 @@ agent-harness list toolpacks           # 列出可选工具包
 - npm 包名：`cc-agent-harness`
 - CLI 命令：`agent-harness`
 
+## 开发
+
+改动结束前请执行 `pnpm agent-review`（lint + test + build）。详见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+
 ## License
 
 基于 [MIT License](./LICENSE) 开源。

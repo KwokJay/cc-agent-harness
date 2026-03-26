@@ -246,7 +246,6 @@ function groupByCategory(commits: ParsedCommit[]): Map<ChangeCategory, string[]>
     subject = subject.replace(/^(feat|fix|docs|chore|refactor|style|ci|build|test|perf)[\s]*[(:!]\s*/i, "");
     subject = subject.replace(/^\)\s*:?\s*/, "");
     subject = subject.charAt(0).toUpperCase() + subject.slice(1);
-    if (!subject.endsWith(".")) subject += "";
 
     const list = map.get(commit.category) ?? [];
     if (!list.includes(subject)) {

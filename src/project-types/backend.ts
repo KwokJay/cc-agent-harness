@@ -16,7 +16,7 @@ export class BackendAdapter implements ProjectTypeAdapter {
     if (existsSync(join(cwd, "Cargo.toml"))) {
       return { type: "backend", language: "rust", signals: ["Cargo.toml"] };
     }
-    if (existsSync(join(cwd, "pom.xml")) || existsSync(join(cwd, "build.gradle"))) {
+    if (existsSync(join(cwd, "pom.xml")) || existsSync(join(cwd, "build.gradle")) || existsSync(join(cwd, "build.gradle.kts"))) {
       return { type: "backend", language: "java", signals: ["java build file"] };
     }
     return null;

@@ -4,6 +4,9 @@ import { ClaudeCodeAdapter } from "./claude-code.js";
 import { CopilotAdapter } from "./copilot.js";
 import { CodexAdapter } from "./codex.js";
 import { OpenCodeAdapter } from "./opencode.js";
+import { WindsurfAdapter } from "./windsurf.js";
+import { TraeAdapter } from "./trae.js";
+import { AugmentAdapter } from "./augment.js";
 
 export type { ToolAdapter, ToolId, ToolAdapterContext, GeneratedFile } from "./types.js";
 export { ALL_TOOL_IDS } from "./types.js";
@@ -14,6 +17,9 @@ const ALL_ADAPTERS: ToolAdapter[] = [
   new CopilotAdapter(),
   new CodexAdapter(),
   new OpenCodeAdapter(),
+  new WindsurfAdapter(),
+  new TraeAdapter(),
+  new AugmentAdapter(),
 ];
 
 export function getToolAdapter(id: ToolId): ToolAdapter {

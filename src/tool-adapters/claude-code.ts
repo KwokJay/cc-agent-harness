@@ -1,6 +1,12 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
+import { render, type TemplateContext } from "../template/engine.js";
+import {
+  CLAUDE_MD_TEMPLATE,
+  CLAUDE_VERIFY_COMMAND_TEMPLATE,
+  CLAUDE_SKILL_TEMPLATE,
+} from "../templates/claude-code.js";
 
 export class ClaudeCodeAdapter implements ToolAdapter {
   id = "claude-code" as const;
@@ -21,84 +27,57 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   private skillFile(skill: SkillContent): GeneratedFile {
-    const content = [
-      `---`,
-      `name: ${skill.name}`,
-      `description: ${skill.description}`,
-      `---`,
-      ``,
-      skill.body,
-      ``,
-    ].join("\n");
+    const context: TemplateContext = {
+      name: skill.name,
+      description: skill.description,
+      body: skill.body,
+    };
 
     return {
       path: `.claude/skills/${skill.name}/SKILL.md`,
-      content,
+      content: render(CLAUDE_SKILL_TEMPLATE, context),
       description: `Claude Code skill: ${skill.name}`,
     };
   }
 
   private claudeMd(ctx: ToolAdapterContext): GeneratedFile {
-    const lines = [
-      `# ${ctx.projectName}`,
-      ``,
-      `Read @AGENTS.md for full project instructions, coding guidelines, and verification protocol.`,
-      ``,
-      `## Quick Reference`,
-      ``,
-      `- **Type**: ${ctx.project.type}`,
-      `- **Language**: ${ctx.project.language}`,
-      ctx.project.framework ? `- **Framework**: ${ctx.project.framework}` : null,
-      ``,
-    ];
+    const verificationLines = ctx.verificationChecks.map((c) => {
+      const cmd = ctx.commands[c];
+      return `Run \`${cmd ?? c}\``;
+    });
 
-    if (ctx.customRules.length > 0) {
-      lines.push(`## Project Rules`);
-      lines.push(``);
-      for (const rule of ctx.customRules) {
-        lines.push(`- ${rule}`);
-      }
-      lines.push(``);
-    }
-
-    if (ctx.verificationChecks.length > 0) {
-      lines.push(`## Before Completing Any Task`);
-      lines.push(``);
-      for (const check of ctx.verificationChecks) {
-        const cmd = ctx.commands[check];
-        lines.push(`- Run \`${cmd ?? check}\``);
-      }
-      lines.push(``);
-    }
-
-    lines.push(getDocsConstraintParagraph());
-    lines.push(getChangelogConstraintParagraph());
+    const context: TemplateContext = {
+      projectName: ctx.projectName,
+      project: {
+        type: ctx.project.type,
+        language: ctx.project.language,
+        framework: ctx.project.framework,
+      },
+      hasCustomRules: ctx.customRules.length > 0,
+      customRules: ctx.customRules,
+      hasVerification: ctx.verificationChecks.length > 0,
+      verificationLines,
+      docsConstraint: getDocsConstraintParagraph(),
+      changelogConstraint: getChangelogConstraintParagraph(),
+    };
 
     return {
       path: "CLAUDE.md",
-      content: lines.filter((l) => l !== null).join("\n"),
+      content: render(CLAUDE_MD_TEMPLATE, context),
       description: "Claude Code project instructions (imports AGENTS.md)",
     };
   }
 
   private verifyCommand(ctx: ToolAdapterContext): GeneratedFile {
-    const checks = ctx.verificationChecks
+    const verifyCommand = ctx.verificationChecks
       .map((c) => ctx.commands[c] ?? c)
       .join(" && ");
 
-    const lines = [
-      `Run the project verification pipeline:`,
-      ``,
-      `\`\`\`shell`,
-      checks,
-      `\`\`\``,
-      ``,
-      `Report the results of each step.`,
-    ];
+    const context: TemplateContext = { verifyCommand };
 
     return {
       path: ".claude/commands/verify.md",
-      content: lines.join("\n") + "\n",
+      content: render(CLAUDE_VERIFY_COMMAND_TEMPLATE, context),
       description: "Claude Code /project:verify command",
     };
   }

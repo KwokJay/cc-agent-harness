@@ -1,4 +1,6 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { render, type TemplateContext } from "../template/engine.js";
+import { OPENCODE_SKILL_TEMPLATE } from "../templates/opencode.js";
 
 export class OpenCodeAdapter implements ToolAdapter {
   id = "opencode" as const;
@@ -15,19 +17,15 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   private skillFile(skill: SkillContent): GeneratedFile {
-    const content = [
-      `---`,
-      `name: ${skill.name}`,
-      `description: ${skill.description}`,
-      `---`,
-      ``,
-      skill.body,
-      ``,
-    ].join("\n");
+    const context: TemplateContext = {
+      name: skill.name,
+      description: skill.description,
+      body: skill.body,
+    };
 
     return {
       path: `.opencode/skills/${skill.name}/SKILL.md`,
-      content,
+      content: render(OPENCODE_SKILL_TEMPLATE, context),
       description: `OpenCode skill: ${skill.name}`,
     };
   }
@@ -35,7 +33,15 @@ export class OpenCodeAdapter implements ToolAdapter {
   private configJson(ctx: ToolAdapterContext): GeneratedFile {
     const config: Record<string, unknown> = {
       $schema: "https://opencode.ai/config-schema.json",
+      project: ctx.projectName,
     };
+
+    if (ctx.verificationChecks.length > 0) {
+      const verifyCmd = ctx.verificationChecks
+        .map((c) => ctx.commands[c] ?? c)
+        .join(" && ");
+      config.instructions = `After making changes, always run: ${verifyCmd}`;
+    }
 
     return {
       path: "opencode.json",

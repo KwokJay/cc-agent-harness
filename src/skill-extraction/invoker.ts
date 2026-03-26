@@ -64,9 +64,9 @@ function buildExtractionCommand(tool: ToolId): string | null {
 
   switch (tool) {
     case "claude-code":
-      return `claude -p "${prompt}"`;
+      return `claude -p '${prompt}'`;
     case "codex":
-      return `codex exec "${prompt}"`;
+      return `codex exec '${prompt}'`;
     case "cursor":
     case "copilot":
     case "opencode":

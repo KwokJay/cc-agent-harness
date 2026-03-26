@@ -4,6 +4,13 @@ All notable changes to **cc-agent-harness** are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- `pnpm verify` / `pnpm agent-review`: single gate running lint, test, and build; `prepublishOnly` now uses this gate
+- `CONTRIBUTING.md` and Cursor rule `.cursor/rules/agent-review-and-verify.mdc` documenting mandatory agent self-review + verify before task completion
+- CI runs `pnpm agent-review` as one step (same as local gate)
+
 ## [0.2.0] - 2026-03-26
 
 ### Added

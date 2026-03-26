@@ -7,6 +7,7 @@ import { getOptionalToolpacks } from "../toolpacks/registry.js";
 import type { ProjectTypeId } from "../project-types/types.js";
 import type { ToolId } from "../tool-adapters/types.js";
 import { invokeSkillExtraction } from "../skill-extraction/invoker.js";
+import { runLightDoctor } from "./doctor.js";
 
 export interface InitOptions {
   project?: string;
@@ -159,6 +160,9 @@ export async function runInit(opts: InitOptions): Promise<void> {
       copilot: "Copilot:     .github/copilot-instructions.md ready",
       codex: "Codex:       .codex/config.toml + .agents/skills/ ready",
       opencode: "OpenCode:    opencode.json + .opencode/skills/ ready",
+      windsurf: "Windsurf:    .windsurf/rules/ ready",
+      trae: "Trae:        .trae/rules/ ready",
+      augment: "Augment:     augment-guidelines.md + .augment/skills/ ready",
     };
     console.log(`  ${labels[tool]}`);
   }
@@ -184,6 +188,8 @@ export async function runInit(opts: InitOptions): Promise<void> {
     console.log("  To extract skills manually, open your AI tool and run:");
     console.log(`  "Read .harness/skills/EXTRACTION-TASK.md and execute the task"`);
   }
+
+  await runLightDoctor();
 }
 
 function resolveProjectType(input: string | undefined, cwd: string): ProjectTypeId {

@@ -104,7 +104,7 @@ function extractFromDependencies(cwd: string, project: DetectedProject): Extract
     }
   }
 
-  if (project.language === "python") {
+  if (project.language.includes("python")) {
     const pyprojectPath = join(cwd, "pyproject.toml");
     if (existsSync(pyprojectPath)) {
       const content = readFileSync(pyprojectPath, "utf-8");
@@ -117,7 +117,7 @@ function extractFromDependencies(cwd: string, project: DetectedProject): Extract
     }
   }
 
-  if (project.language === "go") {
+  if (project.language.includes("go")) {
     skills.push({
       name: "go-conventions",
       description: "Go project conventions. Use when writing or reviewing Go code.",
@@ -134,7 +134,7 @@ function extractFromDependencies(cwd: string, project: DetectedProject): Extract
     });
   }
 
-  if (project.language === "rust") {
+  if (project.language.includes("rust")) {
     skills.push({
       name: "rust-conventions",
       description: "Rust project conventions. Use when writing or reviewing Rust code.",
@@ -151,7 +151,7 @@ function extractFromDependencies(cwd: string, project: DetectedProject): Extract
     });
   }
 
-  if (project.language === "java") {
+  if (project.language.includes("java")) {
     skills.push({
       name: "java-conventions",
       description: "Java project conventions. Use when writing or reviewing Java code.",

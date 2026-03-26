@@ -8,6 +8,8 @@ import type { ToolId } from "../tool-adapters/types.js";
 
 export interface UpdateOptions {
   overwrite?: boolean;
+  dryRun?: boolean;
+  full?: boolean;
 }
 
 export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
@@ -28,22 +30,59 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
   const projectName = project?.name ?? basename(cwd);
   const projectType = (project?.type ?? "backend") as ProjectTypeId;
   const tools = ((config.tools as string[]) ?? ["cursor", "claude-code"]) as ToolId[];
+  const toolpacks = (config.toolpacks as string[] | undefined) ?? [];
+  const skipDocs = (config.skip_docs as boolean | undefined) ?? false;
+
+  const useIncremental = !opts.full && !opts.overwrite;
+  const mode = useIncremental ? "incremental" : "full";
+
+  if (opts.dryRun) {
+    console.log("  Mode: dry-run (no files will be written)\n");
+  } else {
+    console.log(`  Mode: ${mode}\n`);
+  }
 
   const plan = resolveScaffold({
     cwd,
     projectName,
     projectType,
     tools,
+    toolpacks,
+    skipDocs,
   });
 
-  const result = await generateFiles(cwd, plan.files, { overwrite: opts.overwrite ?? true });
+  const result = await generateFiles(cwd, plan.files, {
+    overwrite: opts.full || opts.overwrite,
+    mode,
+    dryRun: opts.dryRun,
+  });
 
   if (result.created.length > 0) {
-    console.log("  Updated:");
+    console.log(`  ${opts.dryRun ? "Would create" : "Created"}:`);
     for (const f of result.created) {
-      console.log(`    ${f}`);
+      console.log(`    + ${f}`);
     }
   }
 
-  console.log(`\nUpdate complete! ${result.created.length} file(s) refreshed.`);
+  if (result.updated.length > 0) {
+    console.log(`  ${opts.dryRun ? "Would update" : "Updated"}:`);
+    for (const f of result.updated) {
+      console.log(`    ~ ${f}`);
+    }
+  }
+
+  if (result.unchanged.length > 0) {
+    console.log(`  Unchanged: ${result.unchanged.length} file(s)`);
+  }
+
+  if (result.skipped.length > 0) {
+    console.log(`  Skipped: ${result.skipped.length} file(s)`);
+  }
+
+  const changed = result.created.length + result.updated.length;
+  if (opts.dryRun) {
+    console.log(`\nDry run complete. ${changed} file(s) would be changed.`);
+  } else {
+    console.log(`\nUpdate complete! ${changed} file(s) changed, ${result.unchanged.length} unchanged.`);
+  }
 }

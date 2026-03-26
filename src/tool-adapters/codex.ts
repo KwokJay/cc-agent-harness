@@ -1,4 +1,6 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { render, type TemplateContext } from "../template/engine.js";
+import { CODEX_CONFIG_TOML_TEMPLATE, CODEX_SKILL_TEMPLATE } from "../templates/codex.js";
 
 export class CodexAdapter implements ToolAdapter {
   id = "codex" as const;
@@ -15,42 +17,32 @@ export class CodexAdapter implements ToolAdapter {
   }
 
   private skillFile(skill: SkillContent): GeneratedFile {
-    const content = [
-      `---`,
-      `name: ${skill.name}`,
-      `description: ${skill.description}`,
-      `---`,
-      ``,
-      skill.body,
-      ``,
-    ].join("\n");
+    const context: TemplateContext = {
+      name: skill.name,
+      description: skill.description,
+      body: skill.body,
+    };
 
     return {
       path: `.agents/skills/${skill.name}/SKILL.md`,
-      content,
+      content: render(CODEX_SKILL_TEMPLATE, context),
       description: `Codex skill: ${skill.name}`,
     };
   }
 
   private configToml(ctx: ToolAdapterContext): GeneratedFile {
-    const lines = [
-      `# Codex project configuration`,
-      `# See https://developers.openai.com/codex/config-reference`,
-      ``,
-    ];
+    const verifyCommand = ctx.verificationChecks
+      .map((c) => ctx.commands[c] ?? c)
+      .join(" && ");
 
-    if (ctx.verificationChecks.length > 0) {
-      const verifyCmd = ctx.verificationChecks
-        .map((c) => ctx.commands[c] ?? c)
-        .join(" && ");
-      lines.push(`# Run verification after changes`);
-      lines.push(`developer_instructions = "After making changes, always run: ${verifyCmd}"`);
-      lines.push(``);
-    }
+    const context: TemplateContext = {
+      hasVerification: ctx.verificationChecks.length > 0,
+      verifyCommand,
+    };
 
     return {
       path: ".codex/config.toml",
-      content: lines.join("\n"),
+      content: render(CODEX_CONFIG_TOML_TEMPLATE, context),
       description: "Codex CLI project configuration",
     };
   }

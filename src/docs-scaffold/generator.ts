@@ -1,8 +1,42 @@
 import type { GeneratedFile } from "../tool-adapters/types.js";
 import type { ProjectTypeId } from "../project-types/types.js";
 
-export function generateDocsDirectory(_projectName: string, _projectType: ProjectTypeId): GeneratedFile[] {
-  return [];
+export function generateDocsDirectory(projectName: string, _projectType: ProjectTypeId): GeneratedFile[] {
+  const readme = [
+    `# ${projectName} — Documentation`,
+    "",
+    "All project documentation is organized under this directory by feature.",
+    "",
+    "## Structure",
+    "",
+    "```text",
+    ".harness/docs/",
+    "  {feature-name}/",
+    "    requirements/   product requirements and user stories",
+    "    design/         UX/interaction design and wireframes",
+    "    architecture/   technical design and API contracts",
+    "    testing/        test plans and test cases",
+    "    releases/       version release notes",
+    "    README.md       feature overview and document index",
+    "```",
+    "",
+    "## Getting Started",
+    "",
+    "To add documentation for a new feature:",
+    "",
+    "1. Create a directory: `.harness/docs/{feature-name}/`",
+    "2. Add a `README.md` inside it to index the feature's documents",
+    "3. Place documents in the appropriate subdirectory (`requirements/`, `design/`, etc.)",
+    "",
+  ].join("\n");
+
+  return [
+    {
+      path: ".harness/docs/README.md",
+      content: readme,
+      description: "Documentation root index",
+    },
+  ];
 }
 
 export function generateDocsConstraintRule(projectName: string): GeneratedFile {

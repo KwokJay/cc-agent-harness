@@ -1,0 +1,30 @@
+---
+description: 每个开发任务结束前必须完成 Agent 自检与自动化验证
+alwaysApply: true
+---
+
+# 任务完成门禁（必做）
+
+在本仓库完成**任意**功能、修复或重构后，在宣称「完成」之前必须执行：
+
+## 1. Agent 审查（自检）
+
+- 对照本次改动的目标，通读 diff：是否有无关改动、遗漏边界情况、类型与安全风险。
+- 确认对外行为（CLI 输出、生成文件路径、配置字段）与 README / CHANGELOG 意图一致。
+- 若涉及用户可见文案或 breaking change，检查是否需更新文档。
+
+## 2. 自动化验证
+
+在仓库根目录执行（须全部通过）：
+
+```bash
+pnpm agent-review
+```
+
+等价于依次执行：`pnpm lint` → `pnpm test` → `pnpm build`。
+
+若任一失败，不得合并或交付；修复后重新运行直至通过。
+
+## 3. 与 CI 对齐
+
+CI 使用相同门禁（见 `.github/workflows/ci.yml`）。本地通过 `pnpm agent-review` 后再推送，可减少 CI 失败轮次。
