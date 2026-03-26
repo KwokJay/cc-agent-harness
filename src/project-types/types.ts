@@ -5,6 +5,16 @@ export interface DetectedProject {
   language: string;
   framework?: string;
   signals: string[];
+  subProjects?: SubProject[];
+}
+
+export interface SubProject {
+  path: string;
+  name: string;
+  type: ProjectTypeId;
+  language: string;
+  framework?: string;
+  signals: string[];
 }
 
 export interface WorkflowCommands {

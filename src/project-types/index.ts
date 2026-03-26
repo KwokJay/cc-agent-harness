@@ -4,8 +4,9 @@ import { BackendAdapter } from "./backend.js";
 import { FullstackAdapter } from "./fullstack.js";
 import { MonorepoAdapter } from "./monorepo.js";
 import { DocsAdapter } from "./docs.js";
+import { scanWorkspace } from "./scanner.js";
 
-export type { ProjectTypeAdapter, ProjectTypeId, DetectedProject, WorkflowCommands } from "./types.js";
+export type { ProjectTypeAdapter, ProjectTypeId, DetectedProject, SubProject, WorkflowCommands } from "./types.js";
 
 const ALL_ADAPTERS: ProjectTypeAdapter[] = [
   new MonorepoAdapter(),
@@ -24,9 +25,5 @@ export function getProjectAdapter(id: ProjectTypeId): ProjectTypeAdapter {
 }
 
 export function detectProjectType(cwd: string): DetectedProject {
-  for (const adapter of ALL_ADAPTERS) {
-    const result = adapter.detect(cwd);
-    if (result) return result;
-  }
-  return { type: "backend", language: "unknown", signals: ["no markers detected, defaulting to backend"] };
+  return scanWorkspace(cwd);
 }

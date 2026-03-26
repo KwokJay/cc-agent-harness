@@ -35,6 +35,14 @@ export async function runInit(opts: InitOptions): Promise<void> {
     const detected = detectProjectType(cwd);
     console.log(`  Detected project: ${detected.type} (${detected.language}${detected.framework ? ` / ${detected.framework}` : ""})`);
     console.log(`  Signals: ${detected.signals.join(", ")}`);
+
+    if (detected.subProjects && detected.subProjects.length > 0) {
+      console.log("");
+      console.log(`  Sub-projects found (${detected.subProjects.length}):`);
+      for (const sub of detected.subProjects) {
+        console.log(`    ${sub.path.padEnd(30)} ${sub.type} (${sub.language}${sub.framework ? ` / ${sub.framework}` : ""})`);
+      }
+    }
     console.log("");
 
     const inquirer = await import("@inquirer/prompts");

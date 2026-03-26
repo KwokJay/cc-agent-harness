@@ -1,5 +1,6 @@
-export type { ProjectTypeAdapter, ProjectTypeId, DetectedProject, WorkflowCommands } from "./project-types/index.js";
+export type { ProjectTypeAdapter, ProjectTypeId, DetectedProject, SubProject, WorkflowCommands } from "./project-types/index.js";
 export { getProjectAdapter, detectProjectType, ALL_PROJECT_TYPE_IDS } from "./project-types/index.js";
+export { scanWorkspace } from "./project-types/scanner.js";
 
 export type { ToolAdapter, ToolId, ToolAdapterContext, GeneratedFile } from "./tool-adapters/index.js";
 export { getToolAdapter, listToolAdapters, ALL_TOOL_IDS } from "./tool-adapters/index.js";
