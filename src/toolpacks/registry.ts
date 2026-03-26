@@ -19,7 +19,7 @@ export interface Toolpack {
   installCommand: string;
   relevantTools: ToolId[];
   /** Where the pack definition came from (discovery). */
-  packSource: "builtin" | "local";
+  packSource: "builtin" | "local" | "npm";
   packVersion: string;
   generateFiles(tools: ToolId[], projectName: string, cwd: string): GeneratedFile[];
 }
@@ -81,7 +81,7 @@ function pluginToToolpack(plugin: ToolpackPlugin): Toolpack {
     installMethod,
     installCommand,
     relevantTools: plugin.relevantTools,
-    packSource: plugin.source,
+    packSource: plugin.source === "npm" ? "npm" : plugin.source,
     packVersion: plugin.version,
     generateFiles: plugin.generateFiles.bind(plugin),
   };

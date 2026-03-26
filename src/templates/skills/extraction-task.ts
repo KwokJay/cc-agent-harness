@@ -27,7 +27,9 @@ Understand what has already been analyzed and what gaps remain.
 
 ### Step 2: Deep-Read the Project
 
-1. Read \`README.md\` and any documentation in \`.harness/docs/\`
+{{#if hasWorkspacePackages}}**Monorepo / workspace:** packages are listed in \`PROJECT-ANALYSIS.md\`. Prefer **one skill per bounded area** (e.g. per package or per layer) when patterns differ across packages; avoid one giant skill that mixes unrelated modules.
+
+{{/if}}1. Read \`README.md\` and any documentation in \`.harness/docs/\`
 2. Scan the full directory tree
 3. Read the main entry point and 3-5 representative source files
 4. Read configuration files and build scripts
@@ -100,6 +102,7 @@ export interface ExtractionTaskTemplateContext extends TemplateContext {
   projectName: string;
   projectSummaryLine: string;
   existingList: string;
+  hasWorkspacePackages: boolean;
 }
 
 export function renderExtractionTaskDoc(ctx: ExtractionTaskTemplateContext): string {

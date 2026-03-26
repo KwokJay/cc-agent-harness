@@ -1,6 +1,6 @@
 {
   "name": "cc-agent-harness",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   "license": "MIT",
   "type": "module",
@@ -36,7 +36,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "schemas"
   ],
   "scripts": {
     "build": "tsup",

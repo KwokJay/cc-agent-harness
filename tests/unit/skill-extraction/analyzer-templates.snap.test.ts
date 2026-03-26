@@ -16,6 +16,8 @@ describe("analyzer meta templates (snapshots)", () => {
         projectSignals: "package.json, tsconfig.json",
         directoryLines: ["- src/: app, main.ts", "- test/: (empty)"],
         skillLines: ["- **typescript-conventions** (technical): TypeScript usage"],
+        hasWorkspacePackages: false,
+        workspacePackageLines: [],
       }),
     ).toMatchSnapshot();
   });
@@ -37,6 +39,7 @@ describe("analyzer meta templates (snapshots)", () => {
         projectName: "fixture-app",
         projectSummaryLine: "backend / typescript / nestjs",
         existingList: "- typescript-conventions (technical)",
+        hasWorkspacePackages: false,
       }),
     ).toMatchSnapshot();
   });

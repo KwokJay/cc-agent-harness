@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, basename } from "node:path";
 import type { GeneratedFile } from "../tool-adapters/types.js";
 import type { DetectedProject } from "../project-types/types.js";
+import { getWorkspacePackageDirs } from "../project-types/scanner.js";
 import { renderProjectAnalysisDoc } from "../templates/skills/project-analysis.js";
 import { renderSkillIndexDoc } from "../templates/skills/skill-index.js";
 import { renderExtractionTaskDoc } from "../templates/skills/extraction-task.js";
@@ -54,7 +55,7 @@ export function analyzeProject(
 
   files.push(generateProjectAnalysis(cwd, project, projectName, skills, generatedDate));
   files.push(generateSkillIndex(skills, projectName, generatedDate));
-  files.push(generateExtractionTask(projectName, project, skills));
+  files.push(generateExtractionTask(cwd, projectName, project, skills));
 
   return { skills, files };
 }
@@ -292,6 +293,16 @@ function generateSkillIndex(skills: ExtractedSkill[], projectName: string, gener
   };
 }
 
+function resolveWorkspacePackagePaths(cwd: string, project: DetectedProject): string[] {
+  if (project.subProjects && project.subProjects.length > 0) {
+    return project.subProjects.map((s) => s.path);
+  }
+  if (project.type === "monorepo" || project.type === "fullstack") {
+    return getWorkspacePackageDirs(cwd);
+  }
+  return [];
+}
+
 function generateProjectAnalysis(
   cwd: string,
   project: DetectedProject,
@@ -307,6 +318,9 @@ function generateProjectAnalysis(
 
   const skillLines = skills.map((s) => `- **${s.name}** (${s.category}): ${s.description.split(".")[0]}`);
 
+  const workspacePackages = resolveWorkspacePackagePaths(cwd, project);
+  const workspacePackageLines = workspacePackages.map((p) => `- \`${p}/\``);
+
   const content = renderProjectAnalysisDoc({
     projectName,
     generatedDate,
@@ -317,6 +331,8 @@ function generateProjectAnalysis(
     projectSignals: project.signals.join(", "),
     directoryLines,
     skillLines,
+    hasWorkspacePackages: workspacePackages.length > 0,
+    workspacePackageLines,
   });
 
   return {
@@ -327,17 +343,20 @@ function generateProjectAnalysis(
 }
 
 function generateExtractionTask(
+  cwd: string,
   projectName: string,
   project: DetectedProject,
   alreadyExtracted: ExtractedSkill[],
 ): GeneratedFile {
   const existingList = alreadyExtracted.map((s) => `- ${s.name} (${s.category})`).join("\n");
   const projectSummaryLine = `${project.type} / ${project.language}${project.framework ? ` / ${project.framework}` : ""}`;
+  const workspacePackages = resolveWorkspacePackagePaths(cwd, project);
 
   const content = renderExtractionTaskDoc({
     projectName,
     projectSummaryLine,
     existingList,
+    hasWorkspacePackages: workspacePackages.length > 0,
   });
 
   return {

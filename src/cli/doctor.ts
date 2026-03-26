@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { parseSkillFile } from "../skill-extraction/parser.js";
 import { validateConfig } from "../config/schema.js";
+import { daysSinceLastVerify, getStaleVerifyDays, readLastVerifyState } from "./verify.js";
 
 export interface DoctorOptions {
   json?: boolean;
@@ -52,6 +53,8 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<void> {
     }
 
     results.push(...checkSkillVersioning(cwd, skills));
+
+    results.push(...checkLastVerifyState(cwd));
   } else if (existsSync(resolve(cwd, ".harness/config.yaml"))) {
     results.push({ name: "config-valid", status: "fail", message: "Harness config exists but is not valid YAML" });
   }
@@ -265,6 +268,46 @@ function checkSkillVersioning(cwd: string, skills: string[]): CheckResult[] {
       name: "skill-version",
       status: "pass",
       message: `All ${withVersion} skill(s) have version metadata`,
+    });
+  }
+
+  return results;
+}
+
+function checkLastVerifyState(cwd: string): CheckResult[] {
+  const state = readLastVerifyState(cwd);
+  if (!state) {
+    return [
+      {
+        name: "last-verify",
+        status: "warn",
+        message: "No `.harness/state/last-verify.json` yet (run `agent-harness verify`)",
+      },
+    ];
+  }
+
+  const results: CheckResult[] = [];
+  if (!state.ok) {
+    results.push({
+      name: "last-verify",
+      status: "warn",
+      message: `Last verify failed (${state.failedChecks.join(", ") || "unknown"}) at ${state.timestamp}`,
+    });
+  } else {
+    results.push({
+      name: "last-verify",
+      status: "pass",
+      message: `Last verify passed at ${state.timestamp} (harness ${state.harnessVersion})`,
+    });
+  }
+
+  const days = daysSinceLastVerify(cwd);
+  const maxDays = getStaleVerifyDays();
+  if (days !== null && days > maxDays) {
+    results.push({
+      name: "last-verify-stale",
+      status: "warn",
+      message: `Last verify is ${Math.floor(days)} day(s) old (>${maxDays}); run \`agent-harness verify\` for a fresh check`,
     });
   }
 

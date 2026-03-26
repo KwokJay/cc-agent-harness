@@ -36,6 +36,10 @@ describe("resolve", () => {
     expect(paths).toContain("CHANGELOG.md");
     expect(paths).toContain(".harness/docs/README.md");
     expect(paths).toContain(".harness/skills/docs-governance/SKILL.md");
+    expect(paths).toContain(".harness/workflows/ralph-loop.md");
+    expect(paths).toContain(".harness/workflows/multi-agent-patterns.md");
+    expect(paths).toContain(".harness/recommended-tools.md");
+    expect(paths).toContain(".harness/state/harness-version.txt");
   });
 
   it("frontend project with claude-code generates CLAUDE.md", async () => {

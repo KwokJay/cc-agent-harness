@@ -4,7 +4,7 @@ import { BackendAdapter } from "./backend.js";
 import { FullstackAdapter } from "./fullstack.js";
 import { MonorepoAdapter } from "./monorepo.js";
 import { DocsAdapter } from "./docs.js";
-import { scanWorkspace } from "./scanner.js";
+import { scanWorkspace, getWorkspacePackageDirs } from "./scanner.js";
 
 export type { ProjectTypeAdapter, ProjectTypeId, DetectedProject, SubProject, WorkflowCommands } from "./types.js";
 
@@ -27,3 +27,5 @@ export function getProjectAdapter(id: ProjectTypeId): ProjectTypeAdapter {
 export function detectProjectType(cwd: string): DetectedProject {
   return scanWorkspace(cwd);
 }
+
+export { getWorkspacePackageDirs };

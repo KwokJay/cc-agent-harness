@@ -88,6 +88,24 @@ describe("analyzeProject", () => {
     expect(skills.map((s) => s.name)).toContain("test-organization");
   });
 
+  it("includes workspace packages in PROJECT-ANALYSIS for monorepo", async () => {
+    fixture = await createFixture({
+      "pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
+      "packages/a/package.json": "{}",
+      "packages/b/package.json": "{}",
+    });
+    const monorepo: DetectedProject = {
+      type: "monorepo",
+      language: "typescript",
+      framework: "pnpm",
+      signals: ["pnpm-workspace.yaml"],
+    };
+    const { files } = analyzeProject(fixture.dir, monorepo, "mono");
+    const analysis = files.find((f) => f.path === ".harness/skills/PROJECT-ANALYSIS.md");
+    expect(analysis?.content).toContain("Workspace packages");
+    expect(analysis?.content).toContain("packages/a");
+  });
+
   it("always emits PROJECT-ANALYSIS.md, INDEX.md, and EXTRACTION-TASK.md", async () => {
     fixture = await createFixture({});
     const { files } = analyzeProject(

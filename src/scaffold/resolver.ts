@@ -10,6 +10,10 @@ import { generateSkillExtractionGuide } from "../skill-extraction/generator.js";
 import { analyzeProject } from "../skill-extraction/analyzer.js";
 import { generateChangelog } from "../changelog/generator.js";
 import { stringify as yamlStringify } from "yaml";
+import { buildRalphLoopMarkdown } from "../templates/workflows/ralph-loop.js";
+import { buildMultiAgentPatternsMarkdown } from "../templates/workflows/multi-agent-patterns.js";
+import { buildRecommendedToolsMarkdown } from "./recommended-tools.js";
+import { getHarnessVersion } from "../cli/harness-version.js";
 
 export interface ResolveOptions {
   cwd: string;
@@ -48,6 +52,10 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     ...(opts.extraRules ?? []),
   ];
   const presetSkills = getDefaultSkills(project.type);
+  const selectedPacks = opts.toolpacks ?? [];
+  const resolvedPacksForDocs = selectedPacks
+    .map((id) => getToolpack(id, opts.cwd))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const analysis = analyzeProject(opts.cwd, project, opts.projectName);
   const extractedSkillNames = analysis.skills.map((s) => s.name);
@@ -98,6 +106,30 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
   }
 
   files.push(...generateHarnessFiles(opts, project, commands, verificationChecks, customRules));
+
+  files.push(
+    {
+      path: ".harness/workflows/ralph-loop.md",
+      content: buildRalphLoopMarkdown(opts.projectName, commands, verificationChecks),
+      description: "Ralph-style verify loop (documentation)",
+    },
+    {
+      path: ".harness/workflows/multi-agent-patterns.md",
+      content: buildMultiAgentPatternsMarkdown(opts.projectName),
+      description: "Multi-agent role patterns (documentation)",
+    },
+    {
+      path: ".harness/recommended-tools.md",
+      content: buildRecommendedToolsMarkdown(opts.projectName, opts.tools, resolvedPacksForDocs),
+      description: "Static recommended tools and paste targets",
+    },
+    {
+      path: ".harness/state/harness-version.txt",
+      content: `${getHarnessVersion()}\n`,
+      description: "Harness package version at last init/update",
+    },
+  );
+
   files.push(...generateSkillFiles(project.type));
 
   files.push(...generateSkillCreatorFiles());
@@ -111,7 +143,6 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     files.push(generateDocsConstraintRule(opts.projectName));
   }
 
-  const selectedPacks = opts.toolpacks ?? [];
   if (selectedPacks.length > 0) {
     files.push(generateToolpackSetupGuide(selectedPacks, opts.tools, opts.cwd));
     for (const packId of selectedPacks) {

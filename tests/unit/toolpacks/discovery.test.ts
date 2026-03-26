@@ -79,4 +79,37 @@ describe("discoverToolpacks", () => {
     const plugins = discoverToolpacks(fixture.dir);
     expect(plugins.length).toBe(4);
   });
+
+  it("discovers npm toolpack from node_modules/@agent-harness/toolpack-*", async () => {
+    const pluginCjs = [
+      "module.exports = {",
+      "  id: 'npm-demo',",
+      "  name: 'Npm Demo',",
+      "  description: 'from npm',",
+      "  category: 'engineering-support',",
+      "  version: '2.0.0',",
+      "  relevantTools: ['cursor'],",
+      "  generateFiles() { return []; },",
+      "};",
+    ].join("\n");
+
+    fixture = await createFixture({
+      "node_modules/@agent-harness/toolpack-npm-demo/package.json": JSON.stringify({
+        name: "@agent-harness/toolpack-npm-demo",
+        version: "2.0.0",
+        main: "./plugin.cjs",
+        "agent-harness": {
+          toolpack: { id: "npm-demo", main: "./plugin.cjs" },
+        },
+      }),
+      "node_modules/@agent-harness/toolpack-npm-demo/plugin.cjs": pluginCjs,
+    });
+
+    const plugins = discoverToolpacks(fixture.dir);
+    expect(plugins.length).toBe(5);
+    const npm = plugins.find((p) => p.id === "npm-demo");
+    expect(npm).toBeDefined();
+    expect(npm!.source).toBe("npm");
+    expect(npm!.npmPackage).toBe("@agent-harness/toolpack-npm-demo");
+  });
 });

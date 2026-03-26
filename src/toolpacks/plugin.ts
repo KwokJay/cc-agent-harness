@@ -13,7 +13,9 @@ export interface ToolpackPlugin {
   description: string;
   category: ToolpackCategory;
   version: string;
-  source: "builtin" | "local";
+  source: "builtin" | "local" | "npm";
+  /** When source is npm, the installing package name (for list/diagnostics). */
+  npmPackage?: string;
   install: ToolpackInstallMethod;
   relevantTools: ToolId[];
   generateFiles(tools: ToolId[], projectName: string, cwd: string): GeneratedFile[];

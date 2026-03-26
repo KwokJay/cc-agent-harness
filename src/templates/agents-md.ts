@@ -30,6 +30,15 @@ Before claiming any task is complete:
 
 {{#each verificationSteps}}{{.}}
 {{/each}}
+{{/if}}{{#if hasWorkflowGuides}}## Harness workflows
+
+- **Verify loop (Ralph-style):** [.harness/workflows/ralph-loop.md](.harness/workflows/ralph-loop.md) — run \`agent-harness verify\` before claiming work is complete (same checks as above).
+- **Multi-agent patterns:** [.harness/workflows/multi-agent-patterns.md](.harness/workflows/multi-agent-patterns.md)
+
+{{/if}}{{#if hasMemoryGuide}}## Context and memory (team)
+
+Document how you use **working**, **session**, and **long-term** context for agents. Replace this placeholder with your conventions or link to an internal doc under \`.harness/docs/\`.
+
 {{/if}}{{docsConstraint}}
 {{changelogConstraint}}
 {{#if hasSkills}}## Skills

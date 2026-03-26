@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-26
+
+### Added
+
+- **Phase 3 (scaffold + light runtime conventions)**  
+  - Shared verification copy: `buildVerificationSteps` / `buildVerificationCheckLines` in `src/workflows/verification-copy.ts` (AGENTS.md and generated docs stay aligned with `verify`).  
+  - **Generated files**: `.harness/workflows/ralph-loop.md`, `.harness/workflows/multi-agent-patterns.md`, `.harness/recommended-tools.md`, `.harness/state/harness-version.txt`.  
+  - **AGENTS.md**: links to workflow docs + context/memory placeholder.  
+  - **`agent-harness mcp merge`**: merge one MCP server into `.cursor/mcp.json` (stdin or `--file`, `--dry-run`).  
+  - **`src/mcp/cursor-mcp.ts`**: shared merge helpers (used by `context-mode` toolpack).  
+  - **`schemas/cursor-mcp.json`**: minimal Cursor `mcpServers` schema (published with package).  
+  - **npm toolpack discovery**: packages named `@agent-harness/toolpack-*` or `agent-harness-toolpack-*` with `agent-harness.toolpack` in `package.json`; `list toolpacks` shows `source=npm`.  
+  - **`docs/TOOLPACK-AUTHOR.md`**: author contract for npm toolpacks.  
+  - **`verify` state**: writes `.harness/state/last-verify.json`; **`doctor`** warns if missing, last run failed, or older than 7 days.  
+  - **`loadHarnessConfig`**, **`getHarnessVersion`** (walk-up `package.json` resolution for tests + dist).  
+  - **Monorepo / workspace**: `getWorkspacePackageDirs` exported; `PROJECT-ANALYSIS.md` lists packages; `EXTRACTION-TASK.md` + `invokeSkillExtraction` prompt hint for per-package skills.
+
+### Changed
+
+- **Toolpack merge order**: builtin → npm → local (later sources override same `id`).  
+- **CLI `--version`**: uses `getHarnessVersion()` from package metadata.
+
 ## [0.4.0] - 2026-03-26
 
 ### Added

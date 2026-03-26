@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { getHarnessVersion } from "../src/cli/harness-version.js";
 
 const program = new Command();
 
@@ -7,7 +8,7 @@ program
   .description(
     "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   )
-  .version("0.4.0");
+  .version(getHarnessVersion());
 
 program
   .command("init")
@@ -39,6 +40,25 @@ program
   .action(async () => {
     const { runVerifyCli } = await import("../src/cli/verify.js");
     await runVerifyCli();
+  });
+
+const mcp = program.command("mcp").description("MCP config helpers (Cursor)");
+
+mcp
+  .command("merge [name]")
+  .description(
+    "Merge one server into .cursor/mcp.json (stdin or --file JSON; body is server config, or one-key object)",
+  )
+  .option("-f, --file <path>", "Read server JSON from file instead of stdin")
+  .option("--dry-run", "Print resulting mcp.json to stdout; do not write")
+  .action(async (name: string | undefined, cmdOpts: { file?: string; dryRun?: boolean }) => {
+    const { runMcpMergeCli } = await import("../src/cli/mcp.js");
+    runMcpMergeCli({
+      cwd: process.cwd(),
+      name: name ?? "",
+      file: cmdOpts.file,
+      dryRun: cmdOpts.dryRun,
+    });
   });
 
 program

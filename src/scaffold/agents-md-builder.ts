@@ -3,6 +3,7 @@ import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 import { render, type TemplateContext } from "../template/engine.js";
 import { AGENTS_MD_TEMPLATE } from "../templates/agents-md.js";
+import { buildVerificationStepsFromWorkflows } from "../workflows/verification-copy.js";
 
 export interface AgentsMdOptions {
   projectName: string;
@@ -11,6 +12,10 @@ export interface AgentsMdOptions {
   verificationChecks: string[];
   customRules: string[];
   skills: string[];
+  /** When true, link to `.harness/workflows/*` (default: true). */
+  includeWorkflowGuides?: boolean;
+  /** When true, include memory-layer placeholder (default: true). */
+  includeMemoryGuide?: boolean;
 }
 
 export function buildAgentsMd(opts: AgentsMdOptions): string {
@@ -19,10 +24,7 @@ export function buildAgentsMd(opts: AgentsMdOptions): string {
     cmd,
   }));
 
-  const verificationSteps = opts.verificationChecks.map((check, i) => {
-    const cmd = opts.commands[check];
-    return `${i + 1}. Run \`${cmd ?? check}\` to verify ${check}.`;
-  });
+  const verificationSteps = buildVerificationStepsFromWorkflows(opts.commands, opts.verificationChecks);
 
   const context: TemplateContext = {
     projectName: opts.projectName,
@@ -41,6 +43,8 @@ export function buildAgentsMd(opts: AgentsMdOptions): string {
     changelogConstraint: getChangelogConstraintParagraph(),
     hasSkills: opts.skills.length > 0,
     skills: opts.skills,
+    hasWorkflowGuides: opts.includeWorkflowGuides !== false,
+    hasMemoryGuide: opts.includeMemoryGuide !== false,
   };
 
   return render(AGENTS_MD_TEMPLATE, context);

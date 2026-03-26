@@ -15,10 +15,10 @@
 | **v0.5.0** | MCP 与工具清单 | 统一生成/合并 `mcp.json`（Cursor 已有 context-mode 先例）的**模式文档 + 可选 schema**；`agent-harness mcp merge` 或 init 选项；多工具 MCP 片段模板 |
 | **v0.5.1** | npm Toolpack 发现 | `node_modules` / `pnpm` 下解析 `@agent-harness/toolpack-*`（或约定 `agent-harness-toolpack-*`），与 builtin/local 合并；`list toolpacks` 显示 `npm` 来源 |
 | **v0.5.2** | JIT 工具组装（静态侧） | 根据 `config` 与已选工具生成「推荐工具列表」Markdown + 各工具可粘贴的片段；**非**运行时动态拉取，而是文档化 + 校验占位 |
-| **v0.6.0** | 验证与持久状态（轻量） | `.harness/state/` 下**可选**写入上次 `verify` 结果摘要（JSON）、时间戳；`doctor` 读取并提示陈旧；不替代 CI，仅本地/Dev 体验 |
-| **v0.6.1** | Ralph / 自证循环（生成物） | 生成 `.harness/workflows/ralph-loop.md`（或各工具等价 commands），约定「未通过 verify 不得宣称完成」；与现有 `verify` 子命令联动 |
-| **v0.6.2** | 多 Agent 模式模板 | 生成可选片段：`initializer-executor`、`supervisor` 等**角色分工**说明 + AGENTS.md 章节模板；纯文档与规则增强 |
-| **v0.7.0** | Skill 提取与 monorepo | 扩展 `invokeSkillExtraction` 工具覆盖策略；复杂 workspace 的 glob/根包解析加固；提取任务模板按子包拆分（可选） |
+| **v0.5.3** | 验证与持久状态（轻量） | `.harness/state/` 下**可选**写入上次 `verify` 结果摘要（JSON）、时间戳；`doctor` 读取并提示陈旧；不替代 CI，仅本地/Dev 体验 |
+| **v0.5.4** | Ralph / 自证循环（生成物） | 生成 `.harness/workflows/ralph-loop.md`（或各工具等价 commands），约定「未通过 verify 不得宣称完成」；与现有 `verify` 子命令联动 |
+| **v0.5.6** | 多 Agent 模式模板 | 生成可选片段：`initializer-executor`、`supervisor` 等**角色分工**说明 + AGENTS.md 章节模板；纯文档与规则增强 |
+| **v0.5.7** | Skill 提取与 monorepo | 扩展 `invokeSkillExtraction` 工具覆盖策略；复杂 workspace 的 glob/根包解析加固；提取任务模板按子包拆分（可选） |
 
 ## 任务清单（可拆 issue）
 

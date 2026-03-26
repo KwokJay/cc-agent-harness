@@ -132,4 +132,19 @@ describe("buildAgentsMd", () => {
     expect(md).toContain("## Changelog Rules");
     expect(md).toContain("CHANGELOG.md");
   });
+
+  it("includes Harness workflows and memory placeholders by default", () => {
+    const md = buildAgentsMd({
+      projectName: "wf",
+      project: baseProject,
+      commands: {},
+      verificationChecks: [],
+      customRules: [],
+      skills: [],
+    });
+    expect(md).toContain("## Harness workflows");
+    expect(md).toContain("ralph-loop.md");
+    expect(md).toContain("multi-agent-patterns.md");
+    expect(md).toContain("## Context and memory");
+  });
 });

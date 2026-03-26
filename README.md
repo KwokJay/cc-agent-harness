@@ -49,6 +49,10 @@ CHANGELOG.md                                 Auto-generated from git history
 .harness/skills/EXTRACTION-TASK.md           AI-powered extraction task
 .harness/skills/PROJECT-ANALYSIS.md          Static analysis results
 .harness/skills/INDEX.md                     Skill index
+.harness/workflows/ralph-loop.md             Ralph-style verify loop (docs)
+.harness/workflows/multi-agent-patterns.md   Multi-agent role patterns (docs)
+.harness/recommended-tools.md                Static tool / paste-target reference
+.harness/state/harness-version.txt           Harness CLI version at last refresh
 ```
 
 ## Skill Distribution
@@ -90,9 +94,35 @@ agent-harness update --dry-run         # Preview; lists paths removed from plan 
 agent-harness list tools               # List supported AI tools
 agent-harness list projects            # List supported project types
 agent-harness list toolpacks           # Optional toolpacks (id, source, version)
+agent-harness mcp merge [name]         # Merge one server into .cursor/mcp.json (--file, --dry-run)
 ```
 
+## MCP config paths (reference)
+
+| Tool / product | Typical MCP / extension config location |
+|----------------|----------------------------------------|
+| Cursor | `.cursor/mcp.json` (`mcpServers`) |
+| Claude Code | See [Anthropic Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP / plugins |
+| OpenAI Codex | Codex MCP / config per [OpenAI developer docs](https://developers.openai.com/codex) |
+| OpenCode | `opencode.json` and vendor docs |
+| GitHub Copilot | VS Code / Copilot extension settings |
+
+To merge a server into **Cursor** without editing JSON by hand:
+
+```shell
+echo '{"command":"npx","args":["-y","some-mcp-package"]}' | agent-harness mcp merge my-server
+agent-harness mcp merge --dry-run my-server --file ./server.json
+```
+
+Optional JSON Schema for Cursor’s shape ships with the package: `schemas/cursor-mcp.json` (point your editor schema mapping at it if useful).
+
+## Verify state (local)
+
+After `agent-harness verify`, a summary is written to `.harness/state/last-verify.json` (no secrets). `agent-harness doctor` warns if it is missing, failed, or older than 7 days. Commit or gitignore this directory per team preference. `harness-version.txt` records the CLI version used at last scaffold refresh.
+
 ## Optional Toolpacks
+
+Built-in and local (`.harness/toolpacks/`) packs are always listed. **npm toolpacks** are discovered when their package name matches `@agent-harness/toolpack-*` or `agent-harness-toolpack-*` and defines `agent-harness.toolpack` in `package.json`. See [docs/TOOLPACK-AUTHOR.md](./docs/TOOLPACK-AUTHOR.md).
 
 | Pack | Category | Description |
 |------|----------|-------------|

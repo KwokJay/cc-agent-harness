@@ -81,7 +81,8 @@ function scanSubDirectories(cwd: string): SubProject[] {
   return subs;
 }
 
-function getWorkspacePackageDirs(cwd: string): string[] {
+/** Package paths relative to workspace root (pnpm / npm workspaces); used by skill extraction and monorepo tooling. */
+export function getWorkspacePackageDirs(cwd: string): string[] {
   const dirs = new Set<string>();
 
   const pnpmWs = join(cwd, "pnpm-workspace.yaml");

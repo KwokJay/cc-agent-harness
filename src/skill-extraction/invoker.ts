@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import type { ToolId } from "../tool-adapters/types.js";
+import { getWorkspacePackageDirs } from "../project-types/scanner.js";
 
 const TOOL_PRIORITY: ToolId[] = ["claude-code", "codex", "cursor", "copilot", "opencode"];
 
@@ -19,7 +20,7 @@ export function invokeSkillExtraction(
   for (const tool of TOOL_PRIORITY) {
     if (!userTools.includes(tool)) continue;
 
-    const command = buildExtractionCommand(tool);
+    const command = buildExtractionCommand(tool, cwd);
     if (!command) {
       skipped.push({ tool, reason: "no CLI extraction command available" });
       continue;
@@ -53,14 +54,25 @@ export function invokeSkillExtraction(
   return { tool: null, success: false, output: "No usable AI tool found for skill extraction", skipped };
 }
 
-function buildExtractionCommand(tool: ToolId): string | null {
+function workspaceExtractionHint(cwd: string): string {
+  const pkgs = getWorkspacePackageDirs(cwd);
+  if (pkgs.length < 2) return "";
+  const sample = pkgs.slice(0, 25).join(", ");
+  const more = pkgs.length > 25 ? ` (+${pkgs.length - 25} more)` : "";
+  return ` This monorepo lists workspace packages: ${sample}${more}. When patterns differ by package, prefer separate skills or clearly scoped sections per package.`;
+}
+
+function buildExtractionCommand(tool: ToolId, cwd: string): string | null {
   const prompt = [
     "Read the file .harness/skills/PROJECT-ANALYSIS.md for the static analysis of this project.",
     "Then read .harness/skills/skill-creator/SKILL.md to understand how to create high-quality skills.",
     "Based on both, extract project-specific skills following the process in .harness/skills/project-skill-extractor/SKILL.md.",
     "Create each skill as a directory under .harness/skills/ with a SKILL.md file.",
     "After creating all skills, update .harness/skills/INDEX.md.",
-  ].join(" ");
+    workspaceExtractionHint(cwd),
+  ]
+    .join(" ")
+    .trim();
 
   switch (tool) {
     case "claude-code":
