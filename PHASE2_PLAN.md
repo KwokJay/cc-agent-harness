@@ -42,11 +42,12 @@
 - [ ] `README`：补充 Phase 2 能力预告与 `verify` 文档
 - [ ] 每条 PR / 任务结束仍执行 **`pnpm agent-review`**
 
-## 明确延后（Phase 3+ 候选）
+## 明确延后（见后续阶段计划）
 
-- 真正的**运行时**状态机、会话记忆存储、Ralph 循环内置调度（与当前「静态脚手架」边界不同，需单独架构）
-- npm scope `@agent-harness/toolpack-*` 自动发现
-- JIT 工具组装 / MCP 清单标准化
+- **Phase 3**：[PHASE3_PLAN.md](./PHASE3_PLAN.md) — MCP/Toolpack 生态、轻量 state、Ralph/多 Agent **生成物**、提取与 monorepo 加固等  
+- **Phase 4**：[PHASE4_PLAN.md](./PHASE4_PLAN.md) — manifest、自诊断 `diagnose`、迁移、v1.0 产品化与规范
+
+仍保留边界：真正的**常驻运行时状态机**与**云端编排**不作为本仓库必达项，可在独立组件或 Phase 4「长期研究」中探索。
 
 ## 下一步行动（本周可执行）
 
@@ -57,3 +58,5 @@
 ---
 
 *本文件随迭代更新；与产品路线图冲突时以仓库 `CHANGELOG` 与里程碑讨论为准。*
+
+**路线图索引**：Phase 2（本文）→ [Phase 3](./PHASE3_PLAN.md) → [Phase 4](./PHASE4_PLAN.md)

@@ -107,6 +107,12 @@ agent-harness list toolpacks           # 列出可选工具包
 
 改动结束前请执行 `pnpm agent-review`（lint + test + build）。详见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
+### 路线图
+
+- [Phase 2](./PHASE2_PLAN.md) — Skill 合并进生成管线、`verify` 命令、E2E 与覆盖率  
+- [Phase 3](./PHASE3_PLAN.md) — MCP/Toolpack 生态、轻量状态、Ralph 与多 Agent 生成物  
+- [Phase 4](./PHASE4_PLAN.md) — 清单 manifest、`diagnose`、迁移、v1.0 产品化
+
 ## License
 
 基于 [MIT License](./LICENSE) 开源。

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `pnpm verify` / `pnpm agent-review`: single gate running lint, test, and build; `prepublishOnly` now uses this gate
 - `CONTRIBUTING.md` and Cursor rule `.cursor/rules/agent-review-and-verify.mdc` documenting mandatory agent self-review + verify before task completion
 - CI runs `pnpm agent-review` as one step (same as local gate)
+- `PHASE3_PLAN.md` and `PHASE4_PLAN.md` roadmap documents; `PHASE2_PLAN.md` cross-links all phases
 
 ## [0.2.0] - 2026-03-26
 
