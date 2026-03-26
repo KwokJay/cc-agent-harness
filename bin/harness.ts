@@ -7,7 +7,7 @@ program
   .description(
     "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   )
-  .version("0.1.0");
+  .version("0.2.0");
 
 program
   .command("init")

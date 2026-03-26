@@ -1,235 +1,111 @@
 <p align="center"><code>npm install -g cc-agent-harness</code></p>
-<p align="center"><strong>cc-agent-harness</strong> is a vendor-neutral CLI and TypeScript toolkit for AI-assisted development workflows.</p>
+<p align="center"><strong>cc-agent-harness</strong> — Harness scaffold for AI-assisted development. Initialize project harness based on project type + AI coding tool.</p>
 <p align="center"><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a></p>
 
-It helps teams standardize project setup, `AGENTS.md` generation, skill discovery, health checks, and verification pipelines without locking into a single model vendor or agent framework.
-
 ---
-
-## Quickstart
-
-### Install and run
-
-Install globally with npm:
-
-```shell
-npm install -g cc-agent-harness
-```
-
-Then initialize a project with the `agent-harness` CLI:
-
-```shell
-agent-harness setup
-agent-harness doctor
-agent-harness verify
-```
-
-### Develop from source
-
-This repository targets `Node >=22` and uses `pnpm` for local development.
-
-```shell
-pnpm install
-pnpm build
-pnpm test
-pnpm lint
-```
 
 ## What It Does
 
-- Generates a consistent `.harness/` project scaffold and `AGENTS.md` from templates.
-- Loads layered YAML configuration and validates it with Zod.
-- Routes agent/model tiers through vendor-neutral `low` / `medium` / `high` mappings.
-- Discovers, validates, and scaffolds reusable project skills.
-- Detects project type and resolves verification commands for TypeScript, Python, and Rust.
-- Runs project health checks plus configurable verification pipelines like build, test, and lint.
-- Assembles reusable agent context from hierarchical `AGENTS.md`, custom rules, and discovered skills.
-- Exposes lifecycle hooks, audit logging, and feature observability through the main CLI.
-- Exposes the same primitives as a TypeScript library for deeper integration.
+`cc-agent-harness` generates a complete AI development harness for your project in one command. It detects your project type, asks which AI coding tools you use, then generates all the right rule files, skills, constraints, and configuration — placed exactly where each tool expects them.
 
-## Common Commands
+**Supported project types**: frontend, backend, fullstack, monorepo, docs (12+ languages auto-detected)
 
-| Command | Description |
-|---------|-------------|
-| `agent-harness setup` | Initialize `.harness/` and generate `AGENTS.md` |
-| `agent-harness update` | Sync templates and configuration |
-| `agent-harness doctor` | Run health checks for the current project |
-| `agent-harness doctor --json` | Output machine-readable health results |
-| `agent-harness verify` | Execute the configured verification pipeline |
-| `agent-harness verify --json` | Output machine-readable verification results |
-| `agent-harness run <task>` | Run a named workflow or adapter command |
-| `agent-harness context build` | Build reusable agent context from project docs and skills |
-| `agent-harness list <resource>` | List `skills`, `agents`, `commands`, `templates`, or `features` |
-| `agent-harness config show` | Print merged configuration |
-| `agent-harness config validate` | Validate config files |
-| `agent-harness schema generate` | Generate JSON Schema for the config |
-| `agent-harness scaffold skill <name>` | Create a new skill scaffold |
+**Supported AI tools**: Cursor, Claude Code, GitHub Copilot, OpenAI Codex, OpenCode
 
-## Configuration
-
-Project config lives at `.harness/harness.config.yaml`. Optional user-level defaults can live at `~/.harness/config.yaml`.
-
-```yaml
-project:
-  name: my-project
-  language: typescript
-  description: "My AI-assisted project"
-
-agents:
-  delegation_first: true
-  model_routing:
-    low: low
-    medium: medium
-    high: high
-  providers:
-    low: "gpt-4o-mini"
-    medium: "claude-sonnet-4-20250514"
-    high: "o3"
-  definitions: []
-
-skills:
-  directories:
-    - ".harness/skills"
-  auto_detect: true
-
-workflows:
-  commands:
-    build: "npm run build"
-    test: "npm test"
-    lint: "npm run lint"
-  verification:
-    checks: ["build", "test", "lint"]
-
-templates:
-  agents_md:
-    variant: standard
-    custom_rules: []
-```
-
-### Model Tiers
-
-`cc-agent-harness` keeps model routing vendor-neutral. Agents and workflows use `low`, `medium`, and `high`, while `providers` maps those tiers to concrete model IDs.
-
-```yaml
-agents:
-  providers:
-    low: "gpt-4o-mini"
-    medium: "claude-sonnet-4-20250514"
-    high: "o3"
-```
-
-## Programmatic API
-
-```typescript
-import {
-  HarnessRuntime,
-  loadConfig,
-  AgentRegistry,
-  discoverSkills,
-  routeModel,
-  inferComplexity,
-  runHealthChecks,
-  render,
-} from "cc-agent-harness";
-
-const config = await loadConfig();
-const runtime = await HarnessRuntime.create();
-const registry = new AgentRegistry(config.agents.definitions);
-const agent = registry.get("executor");
-const tier = routeModel(
-  inferComplexity("refactor the auth module"),
-  config.agents.model_routing,
-);
-const skills = await discoverSkills(config.skills.directories);
-const report = await runHealthChecks([]);
-const context = await runtime.buildContext({ tagStyle: "xml" });
-const output = render("Hello {{name}}", { name: "World" });
-```
-
-## Built-in Adapters
-
-Built-in adapters detect the current project and provide default commands and checks.
-
-| Adapter | Detection | Typical commands |
-|---------|-----------|------------------|
-| TypeScript | `tsconfig.json` or `package.json` | `build`, `test`, `lint` |
-| Python | `pyproject.toml`, `setup.py`, or `requirements.txt` | `test`, `lint`, `fmt` |
-| Rust | `Cargo.toml` | `fmt`, `test`, `clippy`, `build` |
-
-## Skills
-
-Skills are directories containing a `SKILL.md` file with YAML frontmatter.
-
-```markdown
----
-name: my-skill
-description: What this skill does
----
-
-# My Skill
-
-Usage instructions here.
-```
-
-Create one with:
+## Quickstart
 
 ```shell
-agent-harness scaffold skill my-skill -d "Description of the skill"
+npm install -g cc-agent-harness
+
+cd your-project
+agent-harness init
 ```
 
-## Context Assembly
+The interactive flow will:
+1. Detect your project type and language
+2. Show any workspace sub-projects found
+3. Ask which AI coding tools you use
+4. Ask about optional toolpacks
+5. Generate harness files
+6. Auto-extract project skills
+7. Attempt AI-powered deep skill extraction
 
-Build reusable prompt context from hierarchical `AGENTS.md` files, configured custom rules, and discovered skills:
+## What Gets Generated
+
+For a backend project using Cursor + Claude Code:
+
+```text
+AGENTS.md                                    Cross-tool AI instructions
+CLAUDE.md                                    Claude Code entry (imports AGENTS.md)
+CHANGELOG.md                                 Auto-generated from git history
+.cursor/rules/project.mdc                    Cursor project rules
+.cursor/rules/coding.mdc                     Cursor coding conventions
+.cursor/rules/skill-*.mdc                    Cursor skill rules
+.claude/skills/{name}/SKILL.md               Claude Code native skills
+.claude/commands/verify.md                    Claude Code verify command
+.harness/config.yaml                         Harness configuration
+.harness/skills/                             Skill source (backup)
+.harness/skills/skill-creator/SKILL.md       Skill creation methodology
+.harness/skills/EXTRACTION-TASK.md           AI-powered extraction task
+.harness/skills/PROJECT-ANALYSIS.md          Static analysis results
+.harness/skills/INDEX.md                     Skill index
+```
+
+## Skill Distribution
+
+Skills are stored in `.harness/skills/` as the canonical source, then distributed to each tool's native path:
+
+| Tool | Native skill path |
+|------|------------------|
+| Cursor | `.cursor/rules/skill-{name}.mdc` |
+| Claude Code | `.claude/skills/{name}/SKILL.md` |
+| Copilot | `.github/instructions/{name}.instructions.md` |
+| Codex | `.agents/skills/{name}/SKILL.md` |
+| OpenCode | `.opencode/skills/{name}/SKILL.md` |
+
+## Two-Step Skill Extraction
+
+**Step 1 (static)**: The scaffold scans your project files and generates baseline skills from dependencies, directory structure, config files, and test patterns.
+
+**Step 2 (AI-powered)**: Invokes your AI tool (by priority: Claude Code > Codex > Cursor > Copilot > OpenCode) to perform deep extraction using the `skill-creator` methodology.
+
+## Built-in Constraints
+
+The harness injects governance rules into AGENTS.md and each tool's rule files:
+
+- **Documentation Rules**: All docs must go under `.harness/docs/{feature-name}/`
+- **Changelog Rules**: `CHANGELOG.md` must be updated after every meaningful change
+
+## Commands
 
 ```shell
-agent-harness context build
-agent-harness context build --format xml
-agent-harness context build --output .harness/context.md
+agent-harness init                     # Interactive initialization
+agent-harness init -p backend -t cursor,claude-code  # Non-interactive
+agent-harness doctor                   # Check harness health
+agent-harness doctor --json            # Machine-readable output
+agent-harness update                   # Refresh generated files
+agent-harness list tools               # List supported AI tools
+agent-harness list projects            # List supported project types
+agent-harness list toolpacks           # List optional toolpacks
 ```
 
-This is useful when integrating with IDE agents, external runners, or any workflow that needs a stable context artifact.
+## Optional Toolpacks
 
-## Package And CLI
+| Pack | Category | Description |
+|------|----------|-------------|
+| context-mode | Context Engineering | MCP context sandbox with session continuity |
+| rtk | Context Engineering | Terminal output compression (60-90% token savings) |
+| understand-anything | Analysis | Codebase knowledge graph and architecture dashboard |
+| gstack | Engineering Support | Virtual engineering team skills for Claude Code |
+
+```shell
+agent-harness init --toolpacks context-mode,rtk
+```
+
+## Package and CLI
 
 - npm package: `cc-agent-harness`
 - CLI command: `agent-harness`
-
-## Architecture
-
-Generated project structure:
-
-```text
-.harness/
-  harness.config.yaml
-  skills/
-AGENTS.md
-```
-
-Core source layout:
-
-```text
-src/
-  config/        Schema, defaults, layered config loading
-  agent/         Agent registry and model tier routing
-  adapter/       Project type detection and language adapters
-  skill/         Skill discovery, validation, scaffolding
-  health/        Health checks and reporting
-  template/      Template rendering and file generation
-  hook/          Lifecycle hook discovery and dispatch
-  feature/       Feature registry
-  plugin/        Plugin interface and registry
-  context/       Context assembly pipeline
-  audit/         Append-only audit logging
-  cli/           Command implementations
-```
-
-## Docs
-
-- [`docs/getting-started.md`](./docs/getting-started.md)
-- [`docs/architecture.md`](./docs/architecture.md)
-- [`docs/config-reference.md`](./docs/config-reference.md)
-- [`docs/adapter-guide.md`](./docs/adapter-guide.md)
-- [`docs/plugin-guide.md`](./docs/plugin-guide.md)
 
 ## License
 
