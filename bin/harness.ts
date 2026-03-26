@@ -7,7 +7,7 @@ program
   .description(
     "Universal development pipeline harness — config, templates, skills, and health checks for AI-assisted projects.",
   )
-  .version("0.1.0");
+  .version("0.0.1");
 
 program
   .command("setup")
