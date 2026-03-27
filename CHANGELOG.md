@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- Internal roadmap files `PHASE2_PLAN.md`, `PHASE3_PLAN.md`, and `PHASE4_PLAN.md`; the Roadmap subsection was removed from README / README.zh-CN to avoid broken links.
+
 ## [0.7.0] - 2026-03-28
 
 ### Changed (Breaking)

@@ -159,12 +159,6 @@ harn init --toolpacks context-mode,rtk
 
 Before finishing a change, run `pnpm agent-review` (lint + test with coverage + build + E2E). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-### Roadmap
-
-- [Phase 2](./PHASE2_PLAN.md) — skill merge in generator, `verify` CLI, E2E & coverage  
-- [Phase 3](./PHASE3_PLAN.md) — MCP/toolpack ecosystem, light state, Ralph & multi-agent artifacts  
-- [Phase 4](./PHASE4_PLAN.md) — manifest, `diagnose`, migration, v1.0 productization
-
 ## License
 
 Licensed under the [MIT License](./LICENSE).
