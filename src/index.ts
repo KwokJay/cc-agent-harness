@@ -27,6 +27,15 @@ export {
 } from "./workflows/verification-copy.js";
 export { mergeCursorMcpFromDisk, readCursorMcpFile, stringifyCursorMcp } from "./mcp/cursor-mcp.js";
 export { getHarnessVersion } from "./cli/harness-version.js";
+export {
+  buildManifest,
+  writeManifestFile,
+  refreshHarnessManifest,
+  getHarnessManifestPath,
+  HARNESS_MANIFEST_VERSION,
+  type HarnessManifest,
+  type BuildManifestResult,
+} from "./manifest/index.js";
 export { discoverToolpacks } from "./toolpacks/discovery.js";
 export { type ToolpackPlugin, type ToolpackInstallMethod } from "./toolpacks/plugin.js";
 export { buildAgentsMd, type AgentsMdOptions } from "./scaffold/agents-md-builder.js";

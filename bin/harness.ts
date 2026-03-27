@@ -35,11 +35,50 @@ program
   });
 
 program
+  .command("diagnose")
+  .description("Deep harness diagnostics (config, skills, verification wiring, MCP JSON, writable dirs)")
+  .option("--json", "Output machine-readable JSON report")
+  .option("--run-verify", "After checks, run configured verification commands")
+  .action(async (opts: { json?: boolean; runVerify?: boolean }) => {
+    const { runDiagnose } = await import("../src/cli/diagnose.js");
+    await runDiagnose({ json: opts.json, runVerify: opts.runVerify });
+  });
+
+program
   .command("verify")
   .description("Run project verification commands from .harness/config.yaml")
   .action(async () => {
     const { runVerifyCli } = await import("../src/cli/verify.js");
     await runVerifyCli();
+  });
+
+program
+  .command("manifest")
+  .description("Regenerate .harness/manifest.json from config and workspace scan")
+  .option("--json", "Print manifest JSON to stdout after writing")
+  .action(async (cmdOpts: { json?: boolean }) => {
+    const { runManifest } = await import("../src/cli/manifest.js");
+    await runManifest(cmdOpts);
+  });
+
+program
+  .command("migrate <fromVersion>")
+  .description("Show or apply registered migrations from a prior harness CLI version")
+  .option("--apply", "Execute registered patches (default: dry-run)")
+  .action(async (fromVersion: string, cmdOpts: { apply?: boolean }) => {
+    const { runMigrate } = await import("../src/cli/migrate.js");
+    await runMigrate({ fromVersion, apply: cmdOpts.apply });
+  });
+
+program
+  .command("export")
+  .description("Export harness summary (same data as manifest) to stdout or a file")
+  .option("-f, --format <format>", "json or md", "md")
+  .option("-o, --out <file>", "Write to file instead of stdout")
+  .action(async (cmdOpts: { format?: string; out?: string }) => {
+    const { runExport } = await import("../src/cli/export.js");
+    const f = cmdOpts.format === "json" ? "json" : "md";
+    await runExport({ format: f, out: cmdOpts.out });
   });
 
 const mcp = program.command("mcp").description("MCP config helpers (Cursor)");

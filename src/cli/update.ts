@@ -4,6 +4,7 @@ import { parse as parseYaml } from "yaml";
 import { resolve as resolveScaffold } from "../scaffold/resolver.js";
 import { generateFiles } from "../scaffold/generator.js";
 import { diffPlan } from "../scaffold/differ.js";
+import { refreshHarnessManifest } from "../manifest/refresh.js";
 import type { ProjectTypeId } from "../project-types/types.js";
 import type { ToolId } from "../tool-adapters/types.js";
 
@@ -102,6 +103,10 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
   if (opts.dryRun) {
     console.log(`\nDry run complete. ${changed} file(s) would be changed.`);
   } else {
+    const manifestResult = refreshHarnessManifest(cwd);
+    if (!manifestResult.ok) {
+      console.log(`\n  [WARN] Could not write .harness/manifest.json: ${manifestResult.errors.join("; ")}`);
+    }
     console.log(`\nUpdate complete! ${changed} file(s) changed, ${result.unchanged.length} unchanged.`);
   }
 }

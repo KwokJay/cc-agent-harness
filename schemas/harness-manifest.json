@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KwokJay/cc-agent-harness/schemas/harness-manifest.json",
+  "title": "HarnessManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestVersion",
+    "generatedAt",
+    "harnessCliVersion",
+    "project",
+    "tools",
+    "toolpacks",
+    "skills",
+    "verification",
+    "generatedFilesCount"
+  ],
+  "properties": {
+    "manifestVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "harnessCliVersion": {
+      "type": "string"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "language"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "language": { "type": "string" },
+        "framework": { "type": "string" }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "toolpacks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "packSource", "packVersion"],
+        "properties": {
+          "id": { "type": "string" },
+          "packSource": { "type": "string" },
+          "packVersion": { "type": "string" }
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "ids"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks"],
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "command"],
+            "properties": {
+              "name": { "type": "string" },
+              "command": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "generatedFilesCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

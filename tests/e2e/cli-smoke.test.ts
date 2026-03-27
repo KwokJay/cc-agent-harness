@@ -44,5 +44,19 @@ describe("CLI smoke (dist/harness.js)", () => {
 
     r = runHarness(dir, ["verify"]);
     expect(r.status, r.stderr + r.stdout).toBe(0);
+
+    r = runHarness(dir, ["manifest"]);
+    expect(r.status, r.stderr + r.stdout).toBe(0);
+    expect(existsSync(join(dir, ".harness", "manifest.json"))).toBe(true);
+
+    r = runHarness(dir, ["export", "-f", "json", "-o", join(dir, "export.json")]);
+    expect(r.status, r.stderr + r.stdout).toBe(0);
+    expect(existsSync(join(dir, "export.json"))).toBe(true);
+
+    r = runHarness(dir, ["diagnose", "--json"]);
+    expect(r.status, r.stderr + r.stdout).toBe(0);
+
+    r = runHarness(dir, ["migrate", "0.5.0"]);
+    expect(r.status, r.stderr + r.stdout).toBe(0);
   });
 });

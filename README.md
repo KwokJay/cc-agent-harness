@@ -88,6 +88,15 @@ agent-harness init -p backend -t cursor,claude-code  # Non-interactive
 agent-harness doctor                   # Check harness health
 agent-harness doctor --json            # Machine-readable output
 agent-harness doctor --verify          # Doctor, then run workflows.verification.checks
+agent-harness diagnose                 # Deep diagnostics (MCP JSON, verification wiring, writable dirs)
+agent-harness diagnose --json          # Machine-readable diagnose report
+agent-harness diagnose --run-verify    # Diagnose, then run workflows.verification.checks
+agent-harness manifest                 # Regenerate .harness/manifest.json
+agent-harness manifest --json          # Write manifest and print JSON
+agent-harness export                   # Print harness summary (Markdown, same data as manifest)
+agent-harness export -f json -o out.json
+agent-harness migrate 0.5.0            # Show migration plan (dry-run)
+agent-harness migrate 0.5.0 --apply    # Apply registered patches
 agent-harness verify                   # Run verification commands from config
 agent-harness update                   # Refresh generated files
 agent-harness update --dry-run         # Preview; lists paths removed from plan vs generated_files
@@ -115,6 +124,10 @@ agent-harness mcp merge --dry-run my-server --file ./server.json
 ```
 
 Optional JSON Schema for Cursor’s shape ships with the package: `schemas/cursor-mcp.json` (point your editor schema mapping at it if useful).
+
+Harness manifest schema: `schemas/harness-manifest.json`. See [docs/MANIFEST.md](./docs/MANIFEST.md) for field reference and CI ideas.
+
+Optional toolpack listing for docs/marketing: [docs/toolpacks-index.md](./docs/toolpacks-index.md) (regenerate with `pnpm run generate:toolpack-index`).
 
 ## Verify state (local)
 

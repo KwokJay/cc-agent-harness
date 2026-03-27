@@ -28,5 +28,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Agent review gate (lint, test, build)
+      - name: Agent review gate (lint, test, build, toolpack index)
         run: pnpm agent-review

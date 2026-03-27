@@ -1,8 +1,14 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { parseSkillFile } from "../skill-extraction/parser.js";
 import { validateConfig } from "../config/schema.js";
+import {
+  discoverHarnessSkillIds,
+  getDistributedSkillPath,
+  getExpectedToolHarnessFiles,
+  isMetaSkill,
+} from "../harness-inventory/index.js";
 import { daysSinceLastVerify, getStaleVerifyDays, readLastVerifyState } from "./verify.js";
 
 export interface DoctorOptions {
@@ -40,7 +46,7 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<void> {
       }
     }
 
-    const skills = findSkills(cwd);
+    const skills = discoverHarnessSkillIds(cwd);
     results.push({
       name: "skills",
       status: skills.length > 0 ? "pass" : "warn",
@@ -134,18 +140,7 @@ function checkFile(cwd: string, rel: string, label: string): CheckResult {
 }
 
 function checkToolFiles(cwd: string, tool: string): CheckResult {
-  const fileMap: Record<string, string[]> = {
-    cursor: [".cursor/rules/project.mdc"],
-    "claude-code": ["CLAUDE.md"],
-    copilot: [".github/copilot-instructions.md"],
-    codex: [".codex/config.toml"],
-    opencode: ["opencode.json"],
-    windsurf: [".windsurf/rules/project.md"],
-    trae: [".trae/rules/project.md"],
-    augment: ["augment-guidelines.md"],
-  };
-
-  const expected = fileMap[tool];
+  const expected = getExpectedToolHarnessFiles(tool);
   if (!expected) return { name: `tool-${tool}`, status: "warn", message: `Unknown tool: ${tool}` };
 
   const missing = expected.filter((f) => !existsSync(resolve(cwd, f)));
@@ -165,34 +160,6 @@ function loadHarnessConfig(cwd: string): Record<string, unknown> | null {
   }
 }
 
-function findSkills(cwd: string): string[] {
-  const skillsDir = resolve(cwd, ".harness/skills");
-  if (!existsSync(skillsDir)) return [];
-  try {
-    return readdirSync(skillsDir).filter((entry) => {
-      return existsSync(resolve(skillsDir, entry, "SKILL.md"));
-    });
-  } catch {
-    return [];
-  }
-}
-
-const META_SKILLS = new Set(["skill-creator", "project-skill-extractor", "changelog-governance", "docs-governance"]);
-
-function getSkillPath(tool: string, skillName: string): string {
-  const pathMap: Record<string, (name: string) => string> = {
-    cursor: (n) => `.cursor/rules/skill-${n}.mdc`,
-    "claude-code": (n) => `.claude/skills/${n}/SKILL.md`,
-    copilot: (n) => `.github/instructions/${n}.instructions.md`,
-    codex: (n) => `.agents/skills/${n}/SKILL.md`,
-    opencode: (n) => `.opencode/skills/${n}/SKILL.md`,
-    windsurf: (n) => `.windsurf/rules/skill-${n}.md`,
-    trae: (n) => `.trae/rules/skill-${n}.md`,
-    augment: (n) => `.augment/skills/${n}/SKILL.md`,
-  };
-  return pathMap[tool]?.(skillName) ?? "";
-}
-
 function checkManualSkillDistribution(
   cwd: string,
   tools: string[],
@@ -202,7 +169,7 @@ function checkManualSkillDistribution(
   const results: CheckResult[] = [];
 
   for (const skill of skills) {
-    if (META_SKILLS.has(skill)) continue;
+    if (isMetaSkill(skill)) continue;
     const skillPath = resolve(skillsDir, skill, "SKILL.md");
     if (!existsSync(skillPath)) continue;
 
@@ -216,7 +183,7 @@ function checkManualSkillDistribution(
 
     const missingTools: string[] = [];
     for (const tool of tools) {
-      const p = getSkillPath(tool, skill);
+      const p = getDistributedSkillPath(tool, skill);
       if (!p || !existsSync(resolve(cwd, p))) {
         missingTools.push(tool);
       }
@@ -315,13 +282,13 @@ function checkLastVerifyState(cwd: string): CheckResult[] {
 }
 
 function checkSkillDistribution(cwd: string, tools: string[], skills: string[]): CheckResult[] {
-  const distributableSkills = skills.filter((s) => !META_SKILLS.has(s));
+  const distributableSkills = skills.filter((s) => !isMetaSkill(s));
   if (distributableSkills.length === 0) return [];
 
   const results: CheckResult[] = [];
 
   for (const tool of tools) {
-    const testPath = getSkillPath(tool, "test");
+    const testPath = getDistributedSkillPath(tool, "test");
     if (!testPath) {
       results.push({
         name: `skill-dist-${tool}`,
@@ -332,7 +299,7 @@ function checkSkillDistribution(cwd: string, tools: string[], skills: string[]):
     }
 
     const missing = distributableSkills.filter((s) => {
-      const p = getSkillPath(tool, s);
+      const p = getDistributedSkillPath(tool, s);
       return !existsSync(resolve(cwd, p));
     });
 

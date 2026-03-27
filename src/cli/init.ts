@@ -8,6 +8,7 @@ import type { ProjectTypeId } from "../project-types/types.js";
 import type { ToolId } from "../tool-adapters/types.js";
 import { invokeSkillExtraction } from "../skill-extraction/invoker.js";
 import { runLightDoctor } from "./doctor.js";
+import { refreshHarnessManifest } from "../manifest/refresh.js";
 
 export interface InitOptions {
   project?: string;
@@ -155,6 +156,11 @@ export async function runInit(opts: InitOptions): Promise<void> {
   }
 
   console.log(`\nInit complete! ${result.created.length} file(s) created, ${result.skipped.length} skipped.`);
+
+  const manifestResult = refreshHarnessManifest(cwd);
+  if (!manifestResult.ok) {
+    console.log(`\n  [WARN] Could not write .harness/manifest.json: ${manifestResult.errors.join("; ")}`);
+  }
 
   for (const tool of tools) {
     const labels: Record<ToolId, string> = {

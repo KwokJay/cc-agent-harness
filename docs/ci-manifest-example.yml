@@ -1,0 +1,44 @@
+# Example: validate harness manifest in CI (copy into .github/workflows/ or a job step)
+# Prerequisites: Node 22+, pnpm or npm, install cc-agent-harness (global or npx).
+
+name: harness-manifest-example
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".harness/**"
+      - "package.json"
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install harness CLI
+        run: npm install -g cc-agent-harness
+
+      - name: Regenerate manifest
+        run: agent-harness manifest --json > /tmp/manifest.json
+
+      - name: Assert manifest schema version
+        run: |
+          test "$(jq -r '.manifestVersion' /tmp/manifest.json)" -ge 1
+
+      - name: Optional — fail if manifest drift (committed file must match)
+        run: |
+          agent-harness manifest
+          git diff --exit-code .harness/manifest.json

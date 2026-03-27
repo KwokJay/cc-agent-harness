@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-27
+
+### Added
+
+- **Harness manifest**: `.harness/manifest.json` with `manifestVersion`, project/tools/toolpacks/skills/verification summary; JSON Schema `schemas/harness-manifest.json`. Written on `init` / `update` and via `agent-harness manifest`.
+- **`agent-harness export`**: Markdown or JSON summary (`-f json|md`, `-o file`) from the same builder as the manifest.
+- **`agent-harness diagnose`**: Pluggable deep checks (config, verification wiring, skill distribution, `.cursor/mcp.json` JSON, writable dirs); `--json`, optional `--run-verify`.
+- **`agent-harness migrate <fromVersion>`**: Registered migration plans; default dry-run, `--apply` to run patches.
+- **`harness-inventory`**: Shared skill discovery and tool path helpers (used by `doctor`, manifest, diagnose).
+- **`SECURITY.md`**, **Changesets** (`.changeset/config.json`, `pnpm changeset`, release workflow), **`docs/toolpacks-index.md`** + `pnpm run generate:toolpack-index` / `check:toolpack-index`.
+- **Perf regression test**: `tests/perf/resolver-perf.test.ts` (resolve budget).
+- **Docs**: `docs/MANIFEST.md`, `docs/ci-manifest-example.yml`.
+- **npm package**: `package.json` `files` now ships `docs/` (with `dist` and `schemas`) so installed packages include manifest docs and toolpack index.
+
 ## [0.5.0] - 2026-03-26
 
 ### Added
