@@ -1,12 +1,10 @@
-import { existsSync, readFileSync } from "node:fs";
-import { basename, resolve } from "node:path";
-import { parse as parseYaml } from "yaml";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { resolve as resolveScaffold } from "../scaffold/resolver.js";
 import { generateFiles } from "../scaffold/generator.js";
 import { diffPlan } from "../scaffold/differ.js";
 import { refreshHarnessManifest } from "../manifest/refresh.js";
-import type { ProjectTypeId } from "../project-types/types.js";
-import type { ToolId } from "../tool-adapters/types.js";
+import { loadHarnessConfig } from "../config/load-harness-config.js";
 
 export interface UpdateOptions {
   overwrite?: boolean;
@@ -27,13 +25,24 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
   console.log("Agent Harness Update");
   console.log("====================\n");
 
-  const config = parseYaml(readFileSync(configPath, "utf-8")) as Record<string, unknown>;
-  const project = config.project as Record<string, string> | undefined;
-  const projectName = project?.name ?? basename(cwd);
-  const projectType = (project?.type ?? "backend") as ProjectTypeId;
-  const tools = ((config.tools as string[]) ?? ["cursor", "claude-code"]) as ToolId[];
-  const toolpacks = (config.toolpacks as string[] | undefined) ?? [];
-  const skipDocs = (config.skip_docs as boolean | undefined) ?? false;
+  const loaded = loadHarnessConfig(cwd);
+  if (!loaded.valid || !loaded.config) {
+    console.error("Invalid .harness/config.yaml:");
+    for (const e of loaded.errors) {
+      console.error(`  ${e}`);
+    }
+    process.exitCode = 1;
+    return;
+  }
+
+  const config = loaded.config;
+  const wf = config.workflows;
+  const commands =
+    wf.commands && Object.keys(wf.commands).length > 0 ? wf.commands : undefined;
+  const verificationChecks =
+    wf.verification.checks && wf.verification.checks.length > 0
+      ? wf.verification.checks
+      : undefined;
 
   const useIncremental = !opts.full && !opts.overwrite;
   const mode = useIncremental ? "incremental" : "full";
@@ -46,16 +55,17 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
 
   const plan = resolveScaffold({
     cwd,
-    projectName,
-    projectType,
-    tools,
-    toolpacks,
-    skipDocs,
+    projectName: config.project.name,
+    projectType: config.project.type,
+    tools: config.tools,
+    toolpacks: config.toolpacks ?? [],
+    skipDocs: config.skip_docs ?? false,
+    ...(commands ? { commands } : {}),
+    ...(verificationChecks ? { verificationChecks } : {}),
+    ...(config.custom_rules !== undefined ? { customRulesFromConfig: config.custom_rules } : {}),
   });
 
-  const previousFiles = Array.isArray(config.generated_files)
-    ? (config.generated_files as string[])
-    : undefined;
+  const previousFiles = Array.isArray(config.generated_files) ? config.generated_files : undefined;
 
   if (opts.dryRun && previousFiles && previousFiles.length > 0) {
     const { removed } = diffPlan(cwd, plan.files, previousFiles);

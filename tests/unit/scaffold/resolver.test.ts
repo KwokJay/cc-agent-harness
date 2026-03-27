@@ -125,6 +125,53 @@ describe("resolve", () => {
     expect(plan.customRules.length).toBeGreaterThan(1);
   });
 
+  it("opts.commands overrides adapter defaultCommands", async () => {
+    fixture = await createFixture(backendPkg);
+    const override = {
+      dev: "npm run dev",
+      build: "npm run build",
+      test: "npm test",
+      lint: "npm run lint",
+    };
+    const plan = resolve({
+      cwd: fixture.dir,
+      projectName: "cmd-override",
+      projectType: "backend",
+      tools: [],
+      commands: override,
+    });
+
+    expect(plan.commands).toEqual(override);
+  });
+
+  it("opts.verificationChecks overrides adapter defaultVerificationChecks", async () => {
+    fixture = await createFixture(backendPkg);
+    const checks = ["lint", "test"];
+    const plan = resolve({
+      cwd: fixture.dir,
+      projectName: "verify-override",
+      projectType: "backend",
+      tools: [],
+      verificationChecks: checks,
+    });
+
+    expect(plan.verificationChecks).toEqual(checks);
+  });
+
+  it("customRulesFromConfig replaces adapter+extraRules merge (harn update path)", async () => {
+    fixture = await createFixture(backendPkg);
+    const plan = resolve({
+      cwd: fixture.dir,
+      projectName: "cfg-rules",
+      projectType: "backend",
+      tools: [],
+      extraRules: ["ignored when customRulesFromConfig is set"],
+      customRulesFromConfig: ["Rule from YAML only"],
+    });
+
+    expect(plan.customRules).toEqual(["Rule from YAML only"]);
+  });
+
   it("does not emit duplicate file paths", async () => {
     fixture = await createFixture(backendPkg);
     const plan = resolve({

@@ -1,4 +1,8 @@
-import type { ProjectTypeId, DetectedProject, WorkflowCommands } from "../project-types/types.js";
+import type {
+  ProjectTypeId,
+  DetectedProject,
+  WorkflowCommands,
+} from "../project-types/types.js";
 import type { ToolId, ToolAdapterContext, GeneratedFile, SkillContent } from "../tool-adapters/types.js";
 import { getProjectAdapter, detectProjectType } from "../project-types/index.js";
 import { getToolAdapter } from "../tool-adapters/index.js";
@@ -23,6 +27,15 @@ export interface ResolveOptions {
   extraRules?: string[];
   toolpacks?: string[];
   skipDocs?: boolean;
+  /** Override adapter-default workflow commands (e.g. from config.yaml on `harn update`). */
+  commands?: WorkflowCommands;
+  /** Override adapter-default verification checks (e.g. from config.yaml on `harn update`). */
+  verificationChecks?: string[];
+  /**
+   * When set (e.g. `harn update` with `custom_rules` in YAML), replaces adapter+extraRules merge.
+   * When unset (`harn init`), uses `adapter.defaultCustomRules()` + `extraRules`.
+   */
+  customRulesFromConfig?: string[];
 }
 
 export interface ResolvedPlan {
@@ -45,12 +58,18 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     : detectProjectType(opts.cwd);
 
   const adapter = getProjectAdapter(project.type);
-  const commands = adapter.defaultCommands(project);
-  const verificationChecks = adapter.defaultVerificationChecks();
-  const customRules = [
-    ...adapter.defaultCustomRules(),
-    ...(opts.extraRules ?? []),
-  ];
+  const commands =
+    opts.commands != null && Object.keys(opts.commands).length > 0
+      ? opts.commands
+      : adapter.defaultCommands(project);
+  const verificationChecks =
+    opts.verificationChecks != null && opts.verificationChecks.length > 0
+      ? opts.verificationChecks
+      : adapter.defaultVerificationChecks();
+  const customRules =
+    opts.customRulesFromConfig !== undefined
+      ? [...opts.customRulesFromConfig]
+      : [...adapter.defaultCustomRules(), ...(opts.extraRules ?? [])];
   const presetSkills = getDefaultSkills(project.type);
   const selectedPacks = opts.toolpacks ?? [];
   const resolvedPacksForDocs = selectedPacks

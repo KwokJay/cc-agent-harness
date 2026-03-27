@@ -15,7 +15,8 @@ export interface HarnessConfig {
     commands: Record<string, string>;
     verification: { checks: string[] };
   };
-  custom_rules: string[];
+  /** When absent in YAML, treated as "use resolver defaults" on init/update. */
+  custom_rules?: string[];
   toolpacks?: string[];
   skip_docs?: boolean;
   generated_files?: string[];
@@ -128,7 +129,7 @@ export function validateConfig(raw: unknown): ValidationResult {
       commands: ((w?.commands as Record<string, string>) ?? {}),
       verification: { checks: ((wv?.checks as string[]) ?? []) },
     },
-    custom_rules: (obj.custom_rules as string[]) ?? [],
+    ...(obj.custom_rules !== undefined ? { custom_rules: obj.custom_rules as string[] } : {}),
     toolpacks: obj.toolpacks as string[] | undefined,
     skip_docs: obj.skip_docs as boolean | undefined,
     generated_files: obj.generated_files as string[] | undefined,

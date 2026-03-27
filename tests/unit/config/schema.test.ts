@@ -74,6 +74,7 @@ describe("validateConfig", () => {
     expect(result.valid).toBe(true);
     expect(result.config!.toolpacks).toBeUndefined();
     expect(result.config!.skip_docs).toBeUndefined();
+    expect(result.config!.custom_rules).toBeUndefined();
   });
 
   it("validates toolpacks as array", () => {

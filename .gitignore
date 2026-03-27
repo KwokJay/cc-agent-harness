@@ -4,3 +4,4 @@ coverage/
 *.tsbuildinfo
 .vite/
 o-research.md
+.planning/
