@@ -36,5 +36,5 @@ export async function runMigrate(opts: MigrateCliOptions): Promise<void> {
     console.log(`Applied: ${p.id}`);
   }
 
-  console.log("\nDone. Consider running `agent-harness update` and `agent-harness manifest`.");
+  console.log("\nDone. Consider running `harn update` and `harn manifest`.");
 }

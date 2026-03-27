@@ -13,9 +13,9 @@
 | 版本区间 | 主题 | 核心交付 |
 |---------|------|----------|
 | **v0.6.0** | Harness 清单标准 | 生成 `.harness/manifest.json`（或 `harness.manifest.json`）：工具列表、skill 数、toolpack、生成时间、harness 版本；供 CI 与其他工具消费 |
-| **v0.6.1** | 导出与互操作 | `agent-harness export`：导出聚合规则摘要（单 Markdown 或 JSON）供非支持工具使用；与 manifest 同源数据 |
-| **v0.6.2** | 自诊断 Harness | `agent-harness diagnose`：深度检查（schema、skill 分发、verify 可执行性、MCP 文件 JSON 合法、路径可写）；输出人类报告 + `--json` |
-| **v0.6.3** | 迁移与升级 | `agent-harness migrate <fromVersion>`：只读提示 + 可选自动补丁（如 config 字段重命名、路径弃用） |
+| **v0.6.1** | 导出与互操作 | `harn export`：导出聚合规则摘要（单 Markdown 或 JSON）供非支持工具使用；与 manifest 同源数据 |
+| **v0.6.2** | 自诊断 Harness | `harn diagnose`：深度检查（schema、skill 分发、verify 可执行性、MCP 文件 JSON 合法、路径可写）；输出人类报告 + `--json` |
+| **v0.6.3** | 迁移与升级 | `harn migrate <fromVersion>`：只读提示 + 可选自动补丁（如 config 字段重命名、路径弃用） |
 | **v0.6.4-rc** | 冻结与文档 | API/CLI 稳定性审查；README / 官网级 Quickstart；破坏性变更清单 |
 | **v0.6.5** | 正式版 | 承诺 semver；发布渠道（npm）与 tag 策略固定；安全披露入口（SECURITY.md） |
 

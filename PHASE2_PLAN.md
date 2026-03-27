@@ -14,7 +14,7 @@
 |---------|------|----------|
 | **v0.3.1** | Skill 合并落地 | `generateFiles` 对 `.harness/skills/**/SKILL.md` 走 `parseSkillFile` + `mergeSkill`；`GenerateResult` 报告 merge 决策；补集成测试 |
 | **v0.3.2** | Toolpack 与列表一致 | `registry` 与 `discoverToolpacks` 统一数据源；`list toolpacks` 展示 `builtin` / `local` 来源；init 可选包列表与 discovery 对齐 |
-| **v0.3.3** | 验证命令与配置 | 新增 `agent-harness verify`（或 `check`）：读 `config.workflows`，在子进程中执行校验命令并汇总退出码；`doctor` 可选调用轻量 verify |
+| **v0.3.3** | 验证命令与配置 | 新增 `harn verify`（或 `check`）：读 `config.workflows`，在子进程中执行校验命令并汇总退出码；`doctor` 可选调用轻量 verify |
 | **v0.3.4** | 分析与模板收尾 | `analyzer.ts` 大段字符串迁到 `src/templates/skills/*`；`PROJECT-ANALYSIS` / `INDEX` / `EXTRACTION-TASK` 快照测试 |
 | **v0.4.0** | E2E 与覆盖率门禁 | `tests/e2e/`：临时目录 `init` → `doctor` → `update --dry-run`；CI 启用 `test:coverage` 与阈值（或分 job） |
 

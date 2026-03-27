@@ -28,7 +28,7 @@ This workflow is **documentation**: run steps in your IDE or script; Harness doe
 
 ## Rule
 
-**Do not claim a task is complete** until \`agent-harness verify\` exits successfully (same checks as AGENTS.md *Verification Protocol*).
+**Do not claim a task is complete** until \`harn verify\` exits successfully (same checks as AGENTS.md *Verification Protocol*).
 
 ## Loop
 
@@ -37,7 +37,7 @@ This workflow is **documentation**: run steps in your IDE or script; Harness doe
 3. Run the project verifier (from repository root):
 
    \`\`\`shell
-   agent-harness verify
+   harn verify
    \`\`\`
 
 4. If verify fails, fix issues and repeat from step 1.

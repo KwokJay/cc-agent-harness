@@ -1,6 +1,6 @@
 # Authoring npm toolpacks for Agent Harness
 
-Toolpacks extend `agent-harness init` / `update` with extra generated files (for example MCP snippets). They can ship as **npm packages** so teams install them like any other dependency.
+Toolpacks extend `harn init` / `update` with extra generated files (for example MCP snippets). They can ship as **npm packages** so teams install them like any other dependency.
 
 ## Package naming
 
@@ -60,7 +60,7 @@ In a fixture repo:
 
 ```bash
 pnpm add ./path/to/your-toolpack
-pnpm exec agent-harness list toolpacks
+pnpm exec harn list toolpacks
 ```
 
 Ensure your package appears with `source=npm`.

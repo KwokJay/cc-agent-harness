@@ -32,7 +32,7 @@ Before claiming any task is complete:
 {{/each}}
 {{/if}}{{#if hasWorkflowGuides}}## Harness workflows
 
-- **Verify loop (Ralph-style):** [.harness/workflows/ralph-loop.md](.harness/workflows/ralph-loop.md) — run \`agent-harness verify\` before claiming work is complete (same checks as above).
+- **Verify loop (Ralph-style):** [.harness/workflows/ralph-loop.md](.harness/workflows/ralph-loop.md) — run \`harn verify\` before claiming work is complete (same checks as above).
 - **Multi-agent patterns:** [.harness/workflows/multi-agent-patterns.md](.harness/workflows/multi-agent-patterns.md)
 
 {{/if}}{{#if hasMemoryGuide}}## Context and memory (team)

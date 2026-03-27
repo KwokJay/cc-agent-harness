@@ -4,7 +4,7 @@ import { getHarnessVersion } from "../src/cli/harness-version.js";
 const program = new Command();
 
 program
-  .name("agent-harness")
+  .name("harn")
   .description(
     "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   )

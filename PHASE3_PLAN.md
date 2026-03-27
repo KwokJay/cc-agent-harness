@@ -12,7 +12,7 @@
 
 | 版本区间 | 主题 | 核心交付 |
 |---------|------|----------|
-| **v0.5.0** | MCP 与工具清单 | 统一生成/合并 `mcp.json`（Cursor 已有 context-mode 先例）的**模式文档 + 可选 schema**；`agent-harness mcp merge` 或 init 选项；多工具 MCP 片段模板 |
+| **v0.5.0** | MCP 与工具清单 | 统一生成/合并 `mcp.json`（Cursor 已有 context-mode 先例）的**模式文档 + 可选 schema**；`harn mcp merge` 或 init 选项；多工具 MCP 片段模板 |
 | **v0.5.1** | npm Toolpack 发现 | `node_modules` / `pnpm` 下解析 `@agent-harness/toolpack-*`（或约定 `agent-harness-toolpack-*`），与 builtin/local 合并；`list toolpacks` 显示 `npm` 来源 |
 | **v0.5.2** | JIT 工具组装（静态侧） | 根据 `config` 与已选工具生成「推荐工具列表」Markdown + 各工具可粘贴的片段；**非**运行时动态拉取，而是文档化 + 校验占位 |
 | **v0.5.3** | 验证与持久状态（轻量） | `.harness/state/` 下**可选**写入上次 `verify` 结果摘要（JSON）、时间戳；`doctor` 读取并提示陈旧；不替代 CI，仅本地/Dev 体验 |
@@ -41,7 +41,7 @@
 ### D. 验证闭环
 
 - [ ] `verify` 与生成物中的「Before complete」段落使用**同一命令来源**（config），避免漂移
-- [ ] Ralph 风格：生成「迭代直到 verify 全绿」的检查清单（仍由人在 IDE 中执行，或由脚本调用 `agent-harness verify`）
+- [ ] Ralph 风格：生成「迭代直到 verify 全绿」的检查清单（仍由人在 IDE 中执行，或由脚本调用 `harn verify`）
 
 ### E. 工程约束
 

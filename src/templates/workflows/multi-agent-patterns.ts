@@ -20,11 +20,11 @@ Optional **role splits** for complex work. These are conventions for humans and 
 
 | Role | Responsibility |
 |------|------------------|
-| **Supervisor** | Reviews Executor output against plan, runs or requests \`agent-harness verify\`, blocks "done" until green. |
+| **Supervisor** | Reviews Executor output against plan, runs or requests \`harn verify\`, blocks "done" until green. |
 
 **Checklist**
 
-- [ ] Supervisor runs \`agent-harness verify\` (or confirms CI equivalent) before sign-off.
+- [ ] Supervisor runs \`harn verify\` (or confirms CI equivalent) before sign-off.
 - [ ] Failed checks are assigned back to Executor with concrete fixes.
 
 ## Tips

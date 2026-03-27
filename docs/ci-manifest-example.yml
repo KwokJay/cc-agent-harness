@@ -32,7 +32,7 @@ jobs:
         run: npm install -g cc-agent-harness
 
       - name: Regenerate manifest
-        run: agent-harness manifest --json > /tmp/manifest.json
+        run: harn manifest --json > /tmp/manifest.json
 
       - name: Assert manifest schema version
         run: |
@@ -40,5 +40,5 @@ jobs:
 
       - name: Optional — fail if manifest drift (committed file must match)
         run: |
-          agent-harness manifest
+          harn manifest
           git diff --exit-code .harness/manifest.json

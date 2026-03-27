@@ -116,6 +116,6 @@ Before finalizing extracted skills:
 
 ## After Extraction
 
-Run \`agent-harness update\` to distribute extracted skills to each AI tool's native path.
+Run \`harn update\` to distribute extracted skills to each AI tool's native path.
 `;
 }

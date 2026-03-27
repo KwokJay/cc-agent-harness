@@ -1,6 +1,6 @@
 {
   "name": "cc-agent-harness",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   "license": "MIT",
   "type": "module",
@@ -27,7 +27,7 @@
     "developer-tools"
   ],
   "bin": {
-    "agent-harness": "./dist/harness.js"
+    "harn": "./dist/harness.js"
   },
   "exports": {
     ".": {

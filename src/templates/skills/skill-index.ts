@@ -2,7 +2,7 @@ import { render, type TemplateContext } from "../../template/engine.js";
 
 const TEMPLATE = `# {{projectName}} - Extracted Skills Index
 
-Auto-extracted on {{generatedDate}} by agent-harness.
+Auto-extracted on {{generatedDate}} by harn.
 
 {{#if technical}}
 ## Technical Skills

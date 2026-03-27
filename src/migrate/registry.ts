@@ -10,7 +10,7 @@ export const migrateRegistry: Record<string, MigratePlanEntry> = {
     patches: [
       {
         id: "noop-baseline",
-        description: "No automatic file changes required for 0.5.x → current; run `agent-harness manifest` after upgrade.",
+        description: "No automatic file changes required for 0.5.x → current; run `harn manifest` after upgrade.",
         safe: true,
         apply() {
           /* intentional no-op */

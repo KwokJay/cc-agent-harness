@@ -85,7 +85,7 @@ Update \`.harness/skills/INDEX.md\` with all new skills, separated by technical/
 
 ### Step 7: Distribute
 
-Run \`agent-harness update\` to distribute new skills to each AI tool's native path.
+Run \`harn update\` to distribute new skills to each AI tool's native path.
 
 ## Quality Gates (from skill-creator)
 

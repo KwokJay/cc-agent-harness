@@ -13,7 +13,7 @@ import { daysSinceLastVerify, getStaleVerifyDays, readLastVerifyState } from "./
 
 export interface DoctorOptions {
   json?: boolean;
-  /** Run `agent-harness verify` after schema-valid config checks. */
+  /** Run `harn verify` after schema-valid config checks. */
   verify?: boolean;
 }
 
@@ -127,7 +127,7 @@ export async function runLightDoctor(): Promise<{ pass: number; warn: number; fa
         console.log(`    ${icon[r.status]} ${r.message}`);
       }
     }
-    console.log(`  Run 'agent-harness doctor' for a full health check.`);
+    console.log(`  Run 'harn doctor' for a full health check.`);
   }
 
   return summary;
@@ -248,7 +248,7 @@ function checkLastVerifyState(cwd: string): CheckResult[] {
       {
         name: "last-verify",
         status: "warn",
-        message: "No `.harness/state/last-verify.json` yet (run `agent-harness verify`)",
+        message: "No `.harness/state/last-verify.json` yet (run `harn verify`)",
       },
     ];
   }
@@ -274,7 +274,7 @@ function checkLastVerifyState(cwd: string): CheckResult[] {
     results.push({
       name: "last-verify-stale",
       status: "warn",
-      message: `Last verify is ${Math.floor(days)} day(s) old (>${maxDays}); run \`agent-harness verify\` for a fresh check`,
+      message: `Last verify is ${Math.floor(days)} day(s) old (>${maxDays}); run \`harn verify\` for a fresh check`,
     });
   }
 

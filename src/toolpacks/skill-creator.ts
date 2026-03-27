@@ -81,5 +81,5 @@ When extracting skills from a project, organize by:
 
 ## Skill Distribution
 
-After creating a skill in \`.harness/skills/\`, run \`agent-harness update\` to distribute it to each AI tool's native path.
+After creating a skill in \`.harness/skills/\`, run \`harn update\` to distribute it to each AI tool's native path.
 `;

@@ -15,7 +15,7 @@ const TOOL_DOC_LINKS: Partial<Record<ToolId, string>> = {
 
 /** Snippet hints only — users paste into each tool's native config location. */
 const SNIPPET_HINTS: Partial<Record<ToolId, string>> = {
-  cursor: "`.cursor/mcp.json` — `mcpServers` object (see `agent-harness mcp merge --help`).",
+  cursor: "`.cursor/mcp.json` — `mcpServers` object (see `harn mcp merge --help`).",
   "claude-code": "Claude Code MCP / plugins per vendor docs.",
   copilot: "`.github/copilot-instructions.md` + GitHub Copilot settings.",
   codex: "`.codex/config.toml` and Codex MCP docs.",
@@ -70,6 +70,6 @@ ${packLines}
 ## Validation (optional)
 
 - Cursor \`mcp.json\` can be checked against the schema shipped with \`cc-agent-harness\` (see package \`schemas/cursor-mcp.json\`).
-- Keep verification commands in \`.harness/config.yaml\` and run \`agent-harness verify\`.
+- Keep verification commands in \`.harness/config.yaml\` and run \`harn verify\`.
 `;
 }

@@ -19,7 +19,7 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
   const configPath = resolve(cwd, ".harness/config.yaml");
 
   if (!existsSync(configPath)) {
-    console.log("No .harness/config.yaml found. Run `agent-harness init` first.");
+    console.log("No .harness/config.yaml found. Run `harn init` first.");
     process.exitCode = 1;
     return;
   }

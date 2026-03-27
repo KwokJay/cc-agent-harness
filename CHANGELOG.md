@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-28
+
+### Changed (Breaking)
+
+- **CLI**: the published executable is now `harn` (see `package.json` `bin`). The previous binary name `agent-harness` is removed. The npm package name is unchanged: `cc-agent-harness` (`npm install -g cc-agent-harness`).
+
 ## [0.6.0] - 2026-03-27
 
 ### Added

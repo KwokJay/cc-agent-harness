@@ -2,7 +2,7 @@ import type { HarnessConfig } from "../config/schema.js";
 import type { WorkflowCommands } from "../project-types/types.js";
 
 /**
- * Numbered markdown lines for AGENTS.md / ralph-loop — same semantics as `agent-harness verify`
+ * Numbered markdown lines for AGENTS.md / ralph-loop — same semantics as `harn verify`
  * (each check maps to workflows.commands[check]).
  */
 export function buildVerificationSteps(config: HarnessConfig): string[] {
