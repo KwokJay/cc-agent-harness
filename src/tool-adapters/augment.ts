@@ -1,4 +1,5 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { TOOL_CAPABILITIES } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 import { render, type TemplateContext } from "../template/engine.js";
@@ -7,6 +8,7 @@ import { AUGMENT_GUIDELINES_TEMPLATE, AUGMENT_SKILL_TEMPLATE } from "../template
 export class AugmentAdapter implements ToolAdapter {
   id = "augment" as const;
   label = "Augment Code";
+  readonly capability = TOOL_CAPABILITIES.augment;
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [this.guidelinesFile(ctx)];

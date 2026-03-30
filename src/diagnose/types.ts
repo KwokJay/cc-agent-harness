@@ -8,8 +8,12 @@ export interface DiagnoseIssue {
   details?: string;
 }
 
+import type { ToolId } from "../tool-adapters/types.js";
+
 export interface DiagnoseContext {
   cwd: string;
+  /** When set (from `.harness/config.yaml`), tool-scoped checks run only for configured tools. */
+  tools?: ToolId[];
 }
 
 export interface DiagnoseCheck {

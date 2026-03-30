@@ -6,7 +6,7 @@ import { listToolAdapters, ALL_TOOL_IDS } from "../tool-adapters/index.js";
 import { getOptionalToolpacks } from "../toolpacks/registry.js";
 import type { ProjectTypeId } from "../project-types/types.js";
 import type { ToolId } from "../tool-adapters/types.js";
-import { invokeSkillExtraction } from "../skill-extraction/invoker.js";
+import { invokeSkillExtraction, describeExtractionSkip } from "../skill-extraction/invoker.js";
 import { runLightDoctor } from "./doctor.js";
 import { refreshHarnessManifest } from "../manifest/refresh.js";
 
@@ -17,6 +17,8 @@ export interface InitOptions {
   toolpacks?: string;
   skipDocs?: boolean;
   overwrite?: boolean;
+  /** Skip Step 2 AI skill extraction (useful for CI / smoke tests). */
+  skipSkillExtraction?: boolean;
 }
 
 export async function runInit(opts: InitOptions): Promise<void> {
@@ -29,6 +31,7 @@ export async function runInit(opts: InitOptions): Promise<void> {
   let tools: ToolId[];
   let toolpacks: string[];
   let skipDocs: boolean;
+  let skipSkillExtraction = opts.skipSkillExtraction ?? false;
 
   if (isInteractive) {
     console.log("Agent Harness Init");
@@ -88,6 +91,7 @@ export async function runInit(opts: InitOptions): Promise<void> {
     }
 
     skipDocs = false;
+    skipSkillExtraction = opts.skipSkillExtraction ?? false;
 
     console.log("");
     console.log("  Summary:");
@@ -112,6 +116,7 @@ export async function runInit(opts: InitOptions): Promise<void> {
     tools = resolveTools(opts.tools);
     toolpacks = opts.toolpacks ? opts.toolpacks.split(",").map((t) => t.trim()) : [];
     skipDocs = opts.skipDocs ?? false;
+    skipSkillExtraction = opts.skipSkillExtraction ?? false;
 
     console.log("Agent Harness Init");
     console.log("==================\n");
@@ -176,26 +181,31 @@ export async function runInit(opts: InitOptions): Promise<void> {
     console.log(`  ${labels[tool]}`);
   }
 
-  console.log("\n--- Skill Extraction (Step 2: AI-powered) ---\n");
-
-  const extractionResult = invokeSkillExtraction(cwd, tools);
-
-  for (const skip of extractionResult.skipped) {
-    console.log(`  [SKIP] ${skip.tool}: ${skip.reason}`);
-  }
-
-  if (extractionResult.success && extractionResult.tool) {
-    console.log(`  [OK]   Skill extraction via ${extractionResult.tool} completed.`);
-  } else if (extractionResult.tool) {
-    console.log(`  [FAIL] ${extractionResult.tool}: ${extractionResult.output}`);
-    console.log("");
-    console.log("  To extract skills manually, open your AI tool and run:");
-    console.log(`  "Read .harness/skills/EXTRACTION-TASK.md and execute the task"`);
+  if (skipSkillExtraction) {
+    console.log("\n--- Skill Extraction (Step 2: AI-powered) ---\n");
+    console.log("  [SKIP] Skill extraction disabled (--skip-skill-extraction).\n");
   } else {
-    console.log("");
-    console.log("  No usable AI tool CLI found for automatic skill extraction.");
-    console.log("  To extract skills manually, open your AI tool and run:");
-    console.log(`  "Read .harness/skills/EXTRACTION-TASK.md and execute the task"`);
+    console.log("\n--- Skill Extraction (Step 2: AI-powered) ---\n");
+
+    const extractionResult = invokeSkillExtraction(cwd, tools);
+
+    for (const skip of extractionResult.skipped) {
+      console.log(`  [SKIP] ${skip.tool}: ${describeExtractionSkip(skip)}`);
+    }
+
+    if (extractionResult.success && extractionResult.tool) {
+      console.log(`  [OK]   Skill extraction via ${extractionResult.tool} completed.`);
+    } else if (extractionResult.tool) {
+      console.log(`  [FAIL] ${extractionResult.tool}: ${extractionResult.output}`);
+      console.log("");
+      console.log("  To extract skills manually, open your AI tool and run:");
+      console.log(`  "Read .harness/skills/EXTRACTION-TASK.md and execute the task"`);
+    } else {
+      console.log("");
+      console.log("  No usable AI tool CLI found for automatic skill extraction.");
+      console.log("  To extract skills manually, open your AI tool and run:");
+      console.log(`  "Read .harness/skills/EXTRACTION-TASK.md and execute the task"`);
+    }
   }
 
   await runLightDoctor();

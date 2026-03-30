@@ -1,4 +1,5 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { TOOL_CAPABILITIES } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 import { render, type TemplateContext } from "../template/engine.js";
@@ -11,6 +12,7 @@ import {
 export class CursorAdapter implements ToolAdapter {
   id = "cursor" as const;
   label = "Cursor";
+  readonly capability = TOOL_CAPABILITIES.cursor;
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [

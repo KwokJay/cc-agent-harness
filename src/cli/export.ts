@@ -35,7 +35,10 @@ function manifestToMarkdown(m: HarnessManifest): string {
     "",
     ...(m.toolpacks.length === 0
       ? ["_(none)_", ""]
-      : m.toolpacks.map((p) => `- **${p.id}** (${p.packSource} ${p.packVersion})`)),
+      : m.toolpacks.map(
+          (p) =>
+            `- **${p.id}** (${p.packSource} ${p.packVersion}${p.sharedPolicy ? "; sharedPolicy" : ""})`,
+        )),
     "",
     "## Skills",
     "",
@@ -52,6 +55,46 @@ function manifestToMarkdown(m: HarnessManifest): string {
     "",
     `- **Tracked count (config):** ${m.generatedFilesCount}`,
     "",
+    "## Adoption",
+    "",
+    `- **Tools enabled:** ${m.adoption.toolsEnabled}`,
+    `- **Toolpacks enabled:** ${m.adoption.toolpacksEnabled}`,
+    `- **Official toolpacks:** ${m.adoption.officialToolpacksEnabled}`,
+    `- **Skills discovered:** ${m.adoption.skillsDiscovered}`,
+    `- **Verification checks configured:** ${m.adoption.verificationChecksConfigured}`,
+    "",
+    "## Health",
+    "",
+    ...(m.health.lastVerifyAt !== undefined
+      ? [
+          `- **Last verify:** ${m.health.lastVerifyAt} (${m.health.lastVerifyOk ? "ok" : "failed"})`,
+        ]
+      : ["- **Last verify:** _(no .harness/state/last-verify.json)_"]),
+    `- **Days since verify:** ${m.health.daysSinceLastVerify === null ? "unknown" : m.health.daysSinceLastVerify.toFixed(2)}`,
+    `- **Generated files on disk:** ${m.health.generatedFilesPresentOnDisk} / ${m.health.generatedFilesTracked} (coverage ${(m.health.artifactCoverageRatio * 100).toFixed(1)}%)`,
+    "",
+    ...(m.aggregation !== undefined
+      ? [
+          "## Aggregation",
+          "",
+          `- **org:** ${m.aggregation.org ?? "_(unset)_"}`,
+          `- **repo_slug:** ${m.aggregation.repo_slug ?? "_(unset)_"}`,
+          "",
+        ]
+      : []),
+    ...(m.approved_exceptions !== undefined && m.approved_exceptions.length > 0
+      ? [
+          "## Approved exceptions",
+          "",
+          ...m.approved_exceptions.flatMap((e) => {
+            const bits = [`- **${e.id}**`];
+            if (e.description) bits.push(`  - ${e.description}`);
+            if (e.target) bits.push(`  - target: \`${e.target}\``);
+            bits.push("");
+            return bits;
+          }),
+        ]
+      : []),
   ];
   return lines.join("\n");
 }

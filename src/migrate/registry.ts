@@ -1,3 +1,5 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { MigratePlanEntry } from "./types.js";
 
 /**
@@ -9,11 +11,16 @@ export const migrateRegistry: Record<string, MigratePlanEntry> = {
     fromVersion: "0.5.0",
     patches: [
       {
-        id: "noop-baseline",
-        description: "No automatic file changes required for 0.5.x → current; run `harn manifest` after upgrade.",
+        id: "add-generated-files-field",
+        description: "Ensure .harness/config.yaml has a generated_files list (added in 0.6.0)",
         safe: true,
-        apply() {
-          /* intentional no-op */
+        apply(cwd: string) {
+          const configPath = resolve(cwd, ".harness/config.yaml");
+          if (!existsSync(configPath)) return;
+          const raw = readFileSync(configPath, "utf-8");
+          if (/\bgenerated_files\s*:/m.test(raw)) return;
+          const sep = raw.endsWith("\n") ? "" : "\n";
+          writeFileSync(configPath, `${raw}${sep}generated_files: []\n`, "utf-8");
         },
       },
     ],

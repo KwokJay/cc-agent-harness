@@ -7,6 +7,9 @@ export const rtkPlugin: ToolpackPlugin = {
   category: "context-engineering",
   version: "1.0.0",
   source: "builtin",
+  provenance: "official",
+  verificationHint: "Teams standardize terminal/context compression alongside `harn update` baselines.",
+  expectedOutcomes: ["RTK available for token-efficient terminal workflows across comparable repos."],
   install: { type: "brew", formula: "rtk" },
   relevantTools: ["cursor", "claude-code", "copilot", "codex", "opencode"],
   generateFiles() {

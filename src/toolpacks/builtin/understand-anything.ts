@@ -7,6 +7,9 @@ export const understandAnythingPlugin: ToolpackPlugin = {
   category: "analysis",
   version: "1.0.0",
   source: "builtin",
+  provenance: "official",
+  verificationHint: "Pairs with mergeable `.harness/skills/**` when multiple AI tools are enabled.",
+  expectedOutcomes: ["Claude Code / Codex can load Understand-Anything for architecture-style analysis."],
   install: { type: "plugin", instructions: "Claude Code: /plugin marketplace add Lum1104/Understand-Anything" },
   relevantTools: ["claude-code", "codex", "cursor"],
   generateFiles() {

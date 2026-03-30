@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Governance loop**: `detectDrift()` in `src/scaffold/differ.ts`; `harn diagnose` includes scaffold drift checks (`drift.<path>`). `harn update` / `harn verify` print follow-up tips; docs in `docs/MANIFEST.md` and README (Governance loop).
+- **Migration `0.5.0`**: patch `add-generated-files-field` appends `generated_files: []` to `.harness/config.yaml` when missing (first non–no-op patch for this from-version).
+- **Phase 2 — Core tool parity**: `TOOL_CAPABILITIES` / `ToolCapability` / `getToolCapability()` in `src/tool-adapters/types.ts`; each adapter exposes `capability`; `docs/CAPABILITY-MATRIX.md` mirrors code.
+- **`harn diagnose`**: passes configured harness `tools` into checks; `.cursor/mcp.json` validation skipped when `cursor` is not in config (`mcp-json.skip-capability`).
+- **Skill extraction**: `ExtractionSkipReason`, `describeExtractionSkip()` in `src/skill-extraction/invoker.ts`; explicit messages for missing CLI, no automation path, and tools outside automation priority list.
+- **`harn init --skip-skill-extraction`**: skips Step 2 AI skill extraction (for deterministic CI / e2e).
+- **Docs**: `docs/POSITIONING.md`, `docs/CAPABILITY-MATRIX.md`, `docs/GOLDEN-PATHS.md`; Phase 1 planning artifacts `ICP-VALIDATION.md`, `ROI-BASELINE.md`, and plan summaries under `.planning/phases/01-icp-and-golden-paths/`.
+
 ### Removed
 
 - Internal roadmap files `PHASE2_PLAN.md`, `PHASE3_PLAN.md`, and `PHASE4_PLAN.md`; the Roadmap subsection was removed from README / README.zh-CN to avoid broken links.

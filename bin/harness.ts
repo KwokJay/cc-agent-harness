@@ -6,7 +6,7 @@ const program = new Command();
 program
   .name("harn")
   .description(
-    "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
+    "Repo-local AI development harness — scaffold rules, skills, and governance artifacts across Cursor, Claude Code, Codex, and more; verify and export for audits.",
   )
   .version(getHarnessVersion());
 
@@ -14,10 +14,14 @@ program
   .command("init")
   .description("Initialize harness for the current project")
   .option("-p, --project <type>", "Project type (frontend|backend|fullstack|monorepo|docs)")
-  .option("-t, --tools <tools>", "AI tools, comma-separated (cursor,claude-code,copilot,codex,opencode)")
+  .option(
+    "-t, --tools <tools>",
+    "AI tool ids, comma-separated (run `harn list tools` for the full list)",
+  )
   .option("-n, --name <name>", "Project name (defaults to directory name)")
   .option("--toolpacks <packs>", "Optional toolpacks, comma-separated (context-mode,rtk,understand-anything,gstack)")
   .option("--skip-docs", "Skip generating docs/ directory structure")
+  .option("--skip-skill-extraction", "Skip Step 2 AI skill extraction (e.g. CI smoke tests)")
   .option("--overwrite", "Overwrite existing files")
   .action(async (opts) => {
     const { runInit } = await import("../src/cli/init.js");

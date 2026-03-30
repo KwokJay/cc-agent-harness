@@ -6,4 +6,8 @@ export {
   type HarnessManifest,
   type HarnessManifestToolpackEntry,
   type HarnessManifestVerificationCheck,
+  type HarnessManifestAdoption,
+  type HarnessManifestHealth,
+  type HarnessManifestAggregation,
+  type HarnessManifestApprovedException,
 } from "./types.js";

@@ -8,8 +8,15 @@ import { WindsurfAdapter } from "./windsurf.js";
 import { TraeAdapter } from "./trae.js";
 import { AugmentAdapter } from "./augment.js";
 
-export type { ToolAdapter, ToolId, ToolAdapterContext, GeneratedFile } from "./types.js";
-export { ALL_TOOL_IDS } from "./types.js";
+export type {
+  ToolAdapter,
+  ToolId,
+  ToolAdapterContext,
+  GeneratedFile,
+  ToolCapability,
+  SupportTier,
+} from "./types.js";
+export { ALL_TOOL_IDS, TOOL_CAPABILITIES, getToolCapability } from "./types.js";
 
 const ALL_ADAPTERS: ToolAdapter[] = [
   new CursorAdapter(),

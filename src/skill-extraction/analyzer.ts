@@ -19,13 +19,20 @@ export interface AnalysisResult {
   files: GeneratedFile[];
 }
 
+export interface AnalyzeProjectOptions {
+  /** When set, used in skill index / project analysis headers instead of today's date (e.g. drift detection). */
+  generatedDate?: string;
+}
+
 export function analyzeProject(
   cwd: string,
   project: DetectedProject,
   projectName: string,
+  options?: AnalyzeProjectOptions,
 ): AnalysisResult {
   const skills: ExtractedSkill[] = [];
-  const generatedDate = new Date().toISOString().split("T")[0];
+  const generatedDate =
+    options?.generatedDate ?? new Date().toISOString().split("T")[0];
 
   skills.push(...extractFromDependencies(cwd, project));
   skills.push(...extractFromDirectoryStructure(cwd, project));

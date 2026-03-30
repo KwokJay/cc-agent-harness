@@ -3,7 +3,9 @@ import type { GeneratedFile } from "../tool-adapters/types.js";
 import { discoverToolpacks } from "./discovery.js";
 import type { ToolpackPlugin } from "./plugin.js";
 import type { ToolpackInstallMethod } from "./plugin.js";
+import type { ToolpackProvenance } from "./plugin.js";
 import type { ToolpackCategory } from "./categories.js";
+import { resolveToolpackProvenance } from "./official.js";
 
 export type { ToolpackCategory } from "./categories.js";
 
@@ -21,6 +23,12 @@ export interface Toolpack {
   /** Where the pack definition came from (discovery). */
   packSource: "builtin" | "local" | "npm";
   packVersion: string;
+  /** Phase 4: official builtins vs community (npm/local). */
+  provenance: ToolpackProvenance;
+  /** Copied from plugin when present (manifest / docs). */
+  verificationHint?: string;
+  /** True when the pack declares org-wide shared policy (Phase 6). */
+  sharedPolicy: boolean;
   generateFiles(tools: ToolId[], projectName: string, cwd: string): GeneratedFile[];
 }
 
@@ -83,6 +91,9 @@ function pluginToToolpack(plugin: ToolpackPlugin): Toolpack {
     relevantTools: plugin.relevantTools,
     packSource: plugin.source === "npm" ? "npm" : plugin.source,
     packVersion: plugin.version,
+    provenance: resolveToolpackProvenance(plugin),
+    ...(plugin.verificationHint !== undefined ? { verificationHint: plugin.verificationHint } : {}),
+    sharedPolicy: plugin.sharedPolicy === true,
     generateFiles: plugin.generateFiles.bind(plugin),
   };
 }

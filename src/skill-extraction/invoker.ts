@@ -3,31 +3,71 @@ import type { ToolId } from "../tool-adapters/types.js";
 import { getWorkspacePackageDirs } from "../project-types/scanner.js";
 
 const TOOL_PRIORITY: ToolId[] = ["claude-code", "codex", "cursor", "copilot", "opencode"];
+const PRIORITY_SET = new Set<ToolId>(TOOL_PRIORITY);
+
+/** Why automated extraction did not run for a tool. */
+export type ExtractionSkipReason =
+  | "extraction-not-supported"
+  | "cli-not-installed"
+  | "not-in-user-tools";
+
+export interface ExtractionSkipped {
+  tool: ToolId;
+  reason: ExtractionSkipReason;
+  /** Extra context (e.g. expected binary name). */
+  detail?: string;
+}
 
 interface InvokeResult {
   tool: ToolId | null;
   success: boolean;
   output: string;
-  skipped: { tool: ToolId; reason: string }[];
+  skipped: ExtractionSkipped[];
 }
 
-export function invokeSkillExtraction(
-  cwd: string,
-  userTools: ToolId[],
-): InvokeResult {
-  const skipped: { tool: ToolId; reason: string }[] = [];
+/** Human-readable line for console / logs. */
+export function describeExtractionSkip(s: ExtractionSkipped): string {
+  switch (s.reason) {
+    case "extraction-not-supported":
+      return "no automated CLI for this tool — use manual step in .harness/skills/EXTRACTION-TASK.md or pick Claude Code / Codex in priority list";
+    case "cli-not-installed":
+      return `CLI not in PATH (expected: ${s.detail ?? "see docs"}) — install the vendor CLI or use manual extraction`;
+    case "not-in-user-tools":
+      return s.detail ?? "tool is not in the automated extraction priority list";
+    default:
+      return s.reason;
+  }
+}
+
+export function invokeSkillExtraction(cwd: string, userTools: ToolId[]): InvokeResult {
+  const skipped: ExtractionSkipped[] = [];
+
+  for (const tool of userTools) {
+    if (!PRIORITY_SET.has(tool)) {
+      skipped.push({
+        tool,
+        reason: "not-in-user-tools",
+        detail: "not in automated extraction priority (claude-code, codex, cursor, copilot, opencode)",
+      });
+    }
+  }
 
   for (const tool of TOOL_PRIORITY) {
     if (!userTools.includes(tool)) continue;
 
     const command = buildExtractionCommand(tool, cwd);
     if (!command) {
-      skipped.push({ tool, reason: "no CLI extraction command available" });
+      skipped.push({ tool, reason: "extraction-not-supported" });
       continue;
     }
 
     if (!isToolInstalled(tool)) {
-      skipped.push({ tool, reason: `CLI not found in PATH (expected: ${getBinName(tool)})` });
+      const bin = getBinName(tool);
+      skipped.push({
+        tool,
+        reason: "cli-not-installed",
+        detail: bin ?? undefined,
+      });
       continue;
     }
 

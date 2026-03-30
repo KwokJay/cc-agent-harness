@@ -20,6 +20,22 @@ export interface HarnessConfig {
   toolpacks?: string[];
   skip_docs?: boolean;
   generated_files?: string[];
+  /**
+   * Optional org/repo identity for aggregating manifests across repositories (Phase 6).
+   */
+  aggregation?: {
+    org?: string;
+    repo_slug?: string;
+  };
+  /**
+   * Approved, machine-readable exceptions (e.g. drift/verify scope) for aggregation consumers.
+   */
+  approved_exceptions?: Array<{
+    id: string;
+    description?: string;
+    /** Optional path or glob hint for what this exception applies to. */
+    target?: string;
+  }>;
 }
 
 export interface ValidationResult {
@@ -109,6 +125,44 @@ export function validateConfig(raw: unknown): ValidationResult {
     errors.push("'generated_files' must be an array if provided");
   }
 
+  if (obj.aggregation !== undefined) {
+    if (typeof obj.aggregation !== "object" || obj.aggregation === null || Array.isArray(obj.aggregation)) {
+      errors.push("'aggregation' must be an object if provided");
+    } else {
+      const agg = obj.aggregation as Record<string, unknown>;
+      if (agg.org !== undefined && typeof agg.org !== "string") {
+        errors.push("'aggregation.org' must be a string if provided");
+      }
+      if (agg.repo_slug !== undefined && typeof agg.repo_slug !== "string") {
+        errors.push("'aggregation.repo_slug' must be a string if provided");
+      }
+    }
+  }
+
+  if (obj.approved_exceptions !== undefined) {
+    if (!Array.isArray(obj.approved_exceptions)) {
+      errors.push("'approved_exceptions' must be an array if provided");
+    } else {
+      for (let i = 0; i < obj.approved_exceptions.length; i++) {
+        const row = obj.approved_exceptions[i];
+        if (typeof row !== "object" || row === null || Array.isArray(row)) {
+          errors.push(`'approved_exceptions[${i}]' must be an object`);
+          continue;
+        }
+        const r = row as Record<string, unknown>;
+        if (typeof r.id !== "string" || !r.id.trim()) {
+          errors.push(`'approved_exceptions[${i}].id' must be a non-empty string`);
+        }
+        if (r.description !== undefined && typeof r.description !== "string") {
+          errors.push(`'approved_exceptions[${i}].description' must be a string if provided`);
+        }
+        if (r.target !== undefined && typeof r.target !== "string") {
+          errors.push(`'approved_exceptions[${i}].target' must be a string if provided`);
+        }
+      }
+    }
+  }
+
   if (errors.length > 0) {
     return { valid: false, errors };
   }
@@ -133,6 +187,23 @@ export function validateConfig(raw: unknown): ValidationResult {
     toolpacks: obj.toolpacks as string[] | undefined,
     skip_docs: obj.skip_docs as boolean | undefined,
     generated_files: obj.generated_files as string[] | undefined,
+    ...(obj.aggregation !== undefined && typeof obj.aggregation === "object" && !Array.isArray(obj.aggregation)
+      ? {
+          aggregation: {
+            ...((obj.aggregation as Record<string, unknown>).org !== undefined
+              ? { org: (obj.aggregation as { org: string }).org }
+              : {}),
+            ...((obj.aggregation as Record<string, unknown>).repo_slug !== undefined
+              ? { repo_slug: (obj.aggregation as { repo_slug: string }).repo_slug }
+              : {}),
+          },
+        }
+      : {}),
+    ...(Array.isArray(obj.approved_exceptions)
+      ? {
+          approved_exceptions: obj.approved_exceptions as HarnessConfig["approved_exceptions"],
+        }
+      : {}),
   };
 
   return { valid: true, config, errors: [] };

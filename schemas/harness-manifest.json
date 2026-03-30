@@ -51,7 +51,10 @@
         "properties": {
           "id": { "type": "string" },
           "packSource": { "type": "string" },
-          "packVersion": { "type": "string" }
+          "packVersion": { "type": "string" },
+          "provenance": { "type": "string", "enum": ["official", "community"] },
+          "verificationHint": { "type": "string" },
+          "sharedPolicy": { "type": "boolean" }
         }
       }
     },
@@ -89,6 +92,66 @@
     "generatedFilesCount": {
       "type": "integer",
       "minimum": 0
+    },
+    "adoption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolsEnabled",
+        "toolpacksEnabled",
+        "officialToolpacksEnabled",
+        "skillsDiscovered",
+        "verificationChecksConfigured"
+      ],
+      "properties": {
+        "toolsEnabled": { "type": "integer", "minimum": 0 },
+        "toolpacksEnabled": { "type": "integer", "minimum": 0 },
+        "officialToolpacksEnabled": { "type": "integer", "minimum": 0 },
+        "skillsDiscovered": { "type": "integer", "minimum": 0 },
+        "verificationChecksConfigured": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "daysSinceLastVerify",
+        "generatedFilesTracked",
+        "generatedFilesPresentOnDisk",
+        "artifactCoverageRatio"
+      ],
+      "properties": {
+        "lastVerifyAt": { "type": "string", "format": "date-time" },
+        "lastVerifyOk": { "type": "boolean" },
+        "daysSinceLastVerify": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "generatedFilesTracked": { "type": "integer", "minimum": 0 },
+        "generatedFilesPresentOnDisk": { "type": "integer", "minimum": 0 },
+        "artifactCoverageRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "aggregation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "org": { "type": "string" },
+        "repo_slug": { "type": "string" }
+      }
+    },
+    "approved_exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" },
+          "target": { "type": "string" }
+        }
+      }
     }
   }
 }

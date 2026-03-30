@@ -114,4 +114,29 @@ describe("validateConfig", () => {
     expect(result.valid).toBe(true);
     expect(result.config!.project.framework).toBe("react");
   });
+
+  it("accepts aggregation and approved_exceptions", () => {
+    const result = validateConfig(
+      validConfig({
+        aggregation: { org: "acme", repo_slug: "billing-api" },
+        approved_exceptions: [
+          { id: "legacy-mcp", description: "Org-managed MCP", target: ".cursor/mcp.json" },
+        ],
+      }),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.config!.aggregation).toEqual({ org: "acme", repo_slug: "billing-api" });
+    expect(result.config!.approved_exceptions).toHaveLength(1);
+  });
+
+  it("rejects approved_exceptions without id", () => {
+    const result = validateConfig(validConfig({ approved_exceptions: [{ description: "x" }] }));
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("approved_exceptions"))).toBe(true);
+  });
+
+  it("rejects invalid aggregation type", () => {
+    const result = validateConfig(validConfig({ aggregation: "acme" }));
+    expect(result.valid).toBe(false);
+  });
 });

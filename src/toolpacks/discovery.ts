@@ -101,6 +101,7 @@ export function loadNpmToolpacks(cwd: string): ToolpackPlugin[] {
       const exported = (mod?.default ?? mod?.toolpack ?? mod) as unknown;
       if (!isToolpackShape(exported)) continue;
 
+      const ex = exported as Record<string, unknown>;
       const plugin: ToolpackPlugin = {
         id: meta.id,
         name: exported.name,
@@ -114,6 +115,7 @@ export function loadNpmToolpacks(cwd: string): ToolpackPlugin[] {
           ? (exported.relevantTools as ToolId[])
           : [],
         generateFiles: exported.generateFiles.bind(exported) as ToolpackPlugin["generateFiles"],
+        ...(typeof ex.sharedPolicy === "boolean" ? { sharedPolicy: ex.sharedPolicy } : {}),
       };
       plugins.push(plugin);
     } catch {
@@ -159,6 +161,7 @@ function parseLocalPlugin(raw: Record<string, unknown>, dirName: string): Toolpa
     source: "local",
     install: { type: "plugin", instructions: `Local toolpack from .harness/toolpacks/${dirName}/` },
     relevantTools: (raw.relevantTools as ToolId[]) ?? [],
+    ...(typeof raw.sharedPolicy === "boolean" ? { sharedPolicy: raw.sharedPolicy } : {}),
     generateFiles(): GeneratedFile[] {
       return [];
     },

@@ -31,6 +31,8 @@ export interface ResolveOptions {
   commands?: WorkflowCommands;
   /** Override adapter-default verification checks (e.g. from config.yaml on `harn update`). */
   verificationChecks?: string[];
+  /** Pin skill-extraction doc dates (used by drift detection to match on-disk files). */
+  generatedDateOverride?: string;
   /**
    * When set (e.g. `harn update` with `custom_rules` in YAML), replaces adapter+extraRules merge.
    * When unset (`harn init`), uses `adapter.defaultCustomRules()` + `extraRules`.
@@ -76,7 +78,9 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     .map((id) => getToolpack(id, opts.cwd))
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
-  const analysis = analyzeProject(opts.cwd, project, opts.projectName);
+  const analysis = analyzeProject(opts.cwd, project, opts.projectName, {
+    generatedDate: opts.generatedDateOverride,
+  });
   const extractedSkillNames = analysis.skills.map((s) => s.name);
   const skills = [...presetSkills, ...extractedSkillNames];
 

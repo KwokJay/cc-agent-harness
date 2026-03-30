@@ -1,10 +1,12 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { TOOL_CAPABILITIES } from "./types.js";
 import { render, type TemplateContext } from "../template/engine.js";
 import { OPENCODE_SKILL_TEMPLATE } from "../templates/opencode.js";
 
 export class OpenCodeAdapter implements ToolAdapter {
   id = "opencode" as const;
   label = "OpenCode";
+  readonly capability = TOOL_CAPABILITIES.opencode;
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files: GeneratedFile[] = [this.configJson(ctx)];

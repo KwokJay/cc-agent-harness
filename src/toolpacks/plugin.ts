@@ -1,6 +1,9 @@
 import type { ToolId, GeneratedFile } from "../tool-adapters/types.js";
 import type { ToolpackCategory } from "./categories.js";
 
+/** Machine-readable tier for registry and manifest (Phase 4). */
+export type ToolpackProvenance = "official" | "community";
+
 export type ToolpackInstallMethod =
   | { type: "npm"; package: string }
   | { type: "brew"; formula: string }
@@ -18,5 +21,19 @@ export interface ToolpackPlugin {
   npmPackage?: string;
   install: ToolpackInstallMethod;
   relevantTools: ToolId[];
+  /**
+   * Defaults: official catalog builtins → `official`; npm/local → `community`.
+   * Set explicitly when a builtin should not be treated as official.
+   */
+  provenance?: ToolpackProvenance;
+  /** Optional hook for verify/diagnose or CI consumers (short string). */
+  verificationHint?: string;
+  /** Optional bullet list of expected user-visible outcomes. */
+  expectedOutcomes?: string[];
+  /**
+   * When true, this pack is intended as **org-wide shared policy** (same npm package/version
+   * across many repos), not a one-off repo customization. Registry and manifest expose this for docs/CI.
+   */
+  sharedPolicy?: boolean;
   generateFiles(tools: ToolId[], projectName: string, cwd: string): GeneratedFile[];
 }

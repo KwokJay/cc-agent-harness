@@ -4,6 +4,7 @@ import type {
   ToolAdapterContext,
   SkillContent,
 } from "../../../src/tool-adapters/types.js";
+import { TOOL_CAPABILITIES } from "../../../src/tool-adapters/types.js";
 import type { DetectedProject } from "../../../src/project-types/types.js";
 
 const project: DetectedProject = {
@@ -30,6 +31,14 @@ function ctx(
 }
 
 describe("ClaudeCodeAdapter", () => {
+  it("exposes first-class capability with automated extraction", () => {
+    const adapter = new ClaudeCodeAdapter();
+    expect(adapter.capability).toBe(TOOL_CAPABILITIES["claude-code"]);
+    expect(adapter.capability.tier).toBe("first-class");
+    expect(adapter.capability.extractionAuto).toBe(true);
+    expect(adapter.capability.mcp).toBe(false);
+  });
+
   it("generates CLAUDE.md with project name and @AGENTS.md reference", () => {
     const adapter = new ClaudeCodeAdapter();
     const [claude] = adapter.generate(ctx());

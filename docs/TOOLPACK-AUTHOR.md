@@ -42,6 +42,7 @@ The module should export a **`ToolpackPlugin`** object (default export or named 
 | `category` | string | One of harness categories (e.g. `engineering-support`, `context-engineering`, …) |
 | `version` | string | Semver string |
 | `relevantTools` | `ToolId[]` | Which AI tools this pack targets |
+| `sharedPolicy` | boolean (optional) | When `true`, marks an **org-wide shared policy** pack (see [SHARED-POLICY-PACKS.md](./SHARED-POLICY-PACKS.md)) |
 | `generateFiles` | function | `(tools, projectName, cwd) => GeneratedFile[]` |
 
 `install` and `source` are set by Harness when loading npm packages; you do not need to set `source: "npm"` in the file.
@@ -64,3 +65,14 @@ pnpm exec harn list toolpacks
 ```
 
 Ensure your package appears with `source=npm`.
+
+## Shared policy vs one-off packs (Phase 6)
+
+- Use **`sharedPolicy: true`** when the same npm package (or local pack) is meant to be **reused across many repos** with the same id/version — for example org MCP snippets or standard skill stubs.
+- One-off repo customization should **omit** `sharedPolicy` (default false). See [SHARED-POLICY-PACKS.md](./SHARED-POLICY-PACKS.md) for workflow and how this differs from ordinary optional packs.
+
+## Official vs community (Phase 4)
+
+- **Official** toolpacks are the **builtin** packs listed in [OFFICIAL-TOOLPACKS.md](./OFFICIAL-TOOLPACKS.md) and `OFFICIAL_TOOLPACK_IDS` in the harness. They map to [TEAM-JOBS](../.planning/phases/03-1-team-jobs-definition/TEAM-JOBS.md) outcomes.
+- **Community** npm or local packages default to `provenance: "community"` unless you set `provenance` on the plugin (advanced).
+- Optional fields on `ToolpackPlugin`: `provenance`, `verificationHint`, `expectedOutcomes` — see [OFFICIAL-TOOLPACKS.md](./OFFICIAL-TOOLPACKS.md) and [MANIFEST.md](./MANIFEST.md) for how hints appear in `.harness/manifest.json`.

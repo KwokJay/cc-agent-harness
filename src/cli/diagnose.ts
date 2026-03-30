@@ -1,5 +1,6 @@
 import { runDiagnoseChecks, summarizeDiagnoseIssues } from "../diagnose/registry.js";
 import { runVerify } from "./verify.js";
+import { loadHarnessConfig } from "../config/load-harness-config.js";
 
 export interface DiagnoseCliOptions {
   json?: boolean;
@@ -9,7 +10,9 @@ export interface DiagnoseCliOptions {
 
 export async function runDiagnose(opts: DiagnoseCliOptions = {}): Promise<void> {
   const cwd = opts.cwd ?? process.cwd();
-  const report = await runDiagnoseChecks({ cwd });
+  const loaded = loadHarnessConfig(cwd);
+  const tools = loaded.valid && loaded.config ? loaded.config.tools : undefined;
+  const report = await runDiagnoseChecks({ cwd, tools });
 
   if (opts.runVerify) {
     const loaded = await import("../config/load-harness-config.js").then((m) => m.loadHarnessConfig(cwd));

@@ -1,10 +1,26 @@
 <p align="center"><code>npm install -g cc-agent-harness</code></p>
-<p align="center"><strong>cc-agent-harness</strong> — Harness scaffold for AI-assisted development. Initialize project harness based on project type + AI coding tool.</p>
+<p align="center"><strong>cc-agent-harness</strong> — Repo-local harness for AI-assisted development: one CLI scaffolds rules, skills, and governance artifacts across the AI tools your team actually uses.</p>
 <p align="center"><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a></p>
 
 ---
 
 **CLI name (v0.7.0+):** the command is `harn`. Install with `npm install -g cc-agent-harness` (package name unchanged). Older docs may still say `agent-harness`.
+
+## Who this is for
+
+**Product story (POS-02):** value is framed around **three ICPs**, **golden-path proof**, and **capability tiers** — not a flat feature list. Details: **[docs/POSITIONING.md](./docs/POSITIONING.md)**; flows: **[docs/GOLDEN-PATHS.md](./docs/GOLDEN-PATHS.md)**.
+
+- **Multi-repo leads** standardizing Cursor / Claude Code / Codex (and more) across services  
+- **Standards champions** who need `verify`, `manifest`, and `export` for audits  
+- **OSS maintainers** giving contributors a consistent baseline (`AGENTS.md`, per-tool rules)
+
+**Not a fit:** hosted-only governance, or single-tool teams with no sync problem. See **[docs/POSITIONING.md](./docs/POSITIONING.md)** (ICP detail).
+
+**Capability tiers:** **[docs/CAPABILITY-MATRIX.md](./docs/CAPABILITY-MATRIX.md)** — *First-class* (Cursor, Claude Code, Codex) vs *baseline* (Copilot, OpenCode, Windsurf, Trae, Augment).
+
+**Copy-paste flows:** **[docs/GOLDEN-PATHS.md](./docs/GOLDEN-PATHS.md)** — backend, frontend, and monorepo examples.
+
+**Reproducible ROI proof:** **[docs/ROI.md](./docs/ROI.md)** — manifest adoption/health metrics, `jq` examples, and links to `ROI-BASELINE.md`.
 
 ## What It Does
 
@@ -12,7 +28,9 @@
 
 **Supported project types**: frontend, backend, fullstack, monorepo, docs (12+ languages auto-detected)
 
-**Supported AI tools**: Cursor, Claude Code, GitHub Copilot, OpenAI Codex, OpenCode
+**Supported AI tools** (tiered): **First-class** — Cursor, Claude Code, OpenAI Codex. **Baseline** — GitHub Copilot, OpenCode, Windsurf, Trae, Augment. See the matrix above for generation / diagnose / MCP / extraction boundaries.
+
+**Runtime:** Node.js **>= 22** (`package.json` `engines`). Use `harn -V` / `harn --version` after install to confirm the CLI.
 
 ## Quickstart
 
@@ -22,6 +40,8 @@ npm install -g cc-agent-harness
 cd your-project
 harn init
 ```
+
+Guided flows and expected files: **[docs/GOLDEN-PATHS.md](./docs/GOLDEN-PATHS.md)**.
 
 The interactive flow will:
 1. Detect your project type and language
@@ -73,7 +93,10 @@ Skills are stored in `.harness/skills/` as the canonical source, then distribute
 
 **Step 1 (static)**: The scaffold scans your project files and generates baseline skills from dependencies, directory structure, config files, and test patterns.
 
-**Step 2 (AI-powered)**: Invokes your AI tool (by priority: Claude Code > Codex > Cursor > Copilot > OpenCode) to perform deep extraction using the `skill-creator` methodology.
+**Step 2 (automated extraction vs manual fallback)**:
+
+- **Automated** (`extractionAuto` in [docs/CAPABILITY-MATRIX.md](./docs/CAPABILITY-MATRIX.md)): only **Claude Code** and **Codex** have a scripted CLI path. The harness tries them in priority order **Claude Code → Codex → Cursor → Copilot → OpenCode**, skipping tools without a CLI or with the CLI missing from `PATH`, with an explicit console reason for each skip.
+- **Manual fallback** (always available): open `.harness/skills/EXTRACTION-TASK.md` in any configured AI tool. Tools outside the automation priority list (e.g. Windsurf, Trae, Augment) rely on this path for deep extraction.
 
 ## Built-in Constraints
 
@@ -87,6 +110,10 @@ The harness injects governance rules into AGENTS.md and each tool's rule files:
 ```shell
 harn init                     # Interactive initialization
 harn init -p backend -t cursor,claude-code  # Non-interactive
+harn init -n my-app -p backend -t cursor,claude-code  # Set display name (--name)
+harn init ... --skip-skill-extraction       # Skip Step 2 AI extraction (CI / smoke tests)
+harn init ... --skip-docs                   # Skip generating .harness/docs/ tree
+harn init ... --overwrite                   # Overwrite existing generated harness files
 harn doctor                   # Check harness health
 harn doctor --json            # Machine-readable output
 harn doctor --verify          # Doctor, then run workflows.verification.checks
@@ -96,17 +123,45 @@ harn diagnose --run-verify    # Diagnose, then run workflows.verification.checks
 harn manifest                 # Regenerate .harness/manifest.json
 harn manifest --json          # Write manifest and print JSON
 harn export                   # Print harness summary (Markdown, same data as manifest)
-harn export -f json -o out.json
+harn export -f json -o out.json             # -f / --format: md (default) or json; -o / --out: file
 harn migrate 0.5.0            # Show migration plan (dry-run)
-harn migrate 0.5.0 --apply    # Apply registered patches
+harn migrate 0.5.0 --apply    # Apply registered patches (0.5.0 = first from-version with a real config patch: adds generated_files if missing)
 harn verify                   # Run verification commands from config
-harn update                   # Refresh generated files
+harn update                   # Refresh generated files (default: incremental)
 harn update --dry-run         # Preview; lists paths removed from plan vs generated_files
+harn update --full            # Force full regeneration (vs incremental default)
+harn update --overwrite       # Force overwrite all generated files
 harn list tools               # List supported AI tools
 harn list projects            # List supported project types
 harn list toolpacks           # Optional toolpacks (id, source, version)
 harn mcp merge [name]         # Merge one server into .cursor/mcp.json (--file, --dry-run)
+harn -V                       # Print CLI version (same as: harn --version)
 ```
+
+### CLI reference (all flags)
+
+| Command | Options |
+|--------|---------|
+| **`harn init`** | `-p` / `--project` one of `frontend`, `backend`, `fullstack`, `monorepo`, `docs` · `-t` / `--tools` comma-separated tool ids (see below) · `-n` / `--name` project name · `--toolpacks` comma-separated ids · `--skip-docs` · `--skip-skill-extraction` · `--overwrite` |
+| **`harn doctor`** | `--json` · `--verify` |
+| **`harn diagnose`** | `--json` · `--run-verify` |
+| **`harn manifest`** | `--json` |
+| **`harn export`** | `-f` / `--format` `md` or `json` · `-o` / `--out` file |
+| **`harn migrate`** | `<fromVersion>` · `--apply` |
+| **`harn update`** | `--dry-run` · `--full` · `--overwrite` |
+| **`harn mcp merge`** | optional server `name` · `-f` / `--file` path · `--dry-run` |
+
+**`-t` / `--tools` ids** (non-interactive): `cursor`, `claude-code`, `copilot`, `codex`, `opencode`, `windsurf`, `trae`, `augment` — same as `harn list tools`. The built-in `--help` string may list a subset; this table is complete.
+
+**Global:** `harn --help`, `harn -h`, `harn -V`, `harn --version`, and `harn <command> --help`.
+
+### Regeneration and stable custom rules
+
+`harn update` defaults to **incremental** refresh; `--full` forces a full regeneration pass, and `--overwrite` forces overwriting generated files. Re-runs can still replace whole files where the scaffold does not merge (e.g. manual edits in `AGENTS.md` may be lost). Put durable team rules in **`.harness/config.yaml`** under **`custom_rules`** (list of strings) so they are merged into generated cross-tool output. See **[docs/GOLDEN-PATHS.md](./docs/GOLDEN-PATHS.md)**.
+
+### Governance loop
+
+After setup, use **`harn update`** → **`harn verify`** → **`harn diagnose --json`** (and **`harn manifest`** / **`harn export`** for inventory) to keep generated rules and skills aligned with config and catch drift in CI. See **[docs/MANIFEST.md](./docs/MANIFEST.md)** for the full loop and a `diagnose` + `jq` gate example.
 
 ## MCP config paths (reference)
 
@@ -133,7 +188,7 @@ Optional toolpack listing for docs/marketing: [docs/toolpacks-index.md](./docs/t
 
 ## Verify state (local)
 
-After `harn verify`, a summary is written to `.harness/state/last-verify.json` (no secrets). `harn doctor` warns if it is missing, failed, or older than 7 days. Commit or gitignore this directory per team preference. `harness-version.txt` records the CLI version used at last scaffold refresh.
+After `harn verify`, a summary is written to `.harness/state/last-verify.json` (no secrets). `harn doctor` warns if it is missing, failed, or older than 7 days. Commit or gitignore this directory per team preference. `.harness/state/harness-version.txt` records the CLI version used at last scaffold refresh.
 
 ## Optional Toolpacks
 
@@ -154,10 +209,18 @@ harn init --toolpacks context-mode,rtk
 
 - npm package: `cc-agent-harness`
 - CLI command: `harn`
+- Node.js: `>= 22`
 
 ## Development
 
-Before finishing a change, run `pnpm agent-review` (lint + test with coverage + build + E2E). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+- **Full gate (contributors):** `pnpm agent-review` — lint, coverage tests, build, E2E, toolpack index check. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+- **Faster loop:** `pnpm verify` — lint, unit tests, build, E2E, toolpack check (no coverage threshold).
+
+## More documentation
+
+- [CHANGELOG.md](./CHANGELOG.md) — release history  
+- [SECURITY.md](./SECURITY.md) — security policy  
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — development and release
 
 ## License
 

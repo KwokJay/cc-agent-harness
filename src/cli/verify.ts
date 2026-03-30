@@ -107,11 +107,13 @@ export function runVerify(opts: VerifyOptions = {}): boolean {
 
   if (!ok) {
     console.error(`\nverify: ${failures.length} check(s) failed.`);
+    console.error(`  Next: fix failing checks above, then re-run 'harn verify'.`);
     return false;
   }
 
   if (!opts.quiet) {
     console.log(`\nverify: all ${checks.length} check(s) passed.`);
+    console.log(`  Tip: use 'harn diagnose --json | jq .summary' in CI to gate on harness health.`);
   }
   return true;
 }

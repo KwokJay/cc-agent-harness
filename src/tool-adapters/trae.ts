@@ -1,4 +1,5 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { TOOL_CAPABILITIES } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 import { render, type TemplateContext } from "../template/engine.js";
@@ -7,6 +8,7 @@ import { TRAE_RULES_TEMPLATE, TRAE_SKILL_TEMPLATE } from "../templates/trae.js";
 export class TraeAdapter implements ToolAdapter {
   id = "trae" as const;
   label = "Trae";
+  readonly capability = TOOL_CAPABILITIES.trae;
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [this.rulesFile(ctx)];

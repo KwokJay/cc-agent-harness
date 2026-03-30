@@ -1,4 +1,5 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { TOOL_CAPABILITIES } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 import { render, type TemplateContext } from "../template/engine.js";
@@ -7,6 +8,7 @@ import { WINDSURF_RULES_TEMPLATE, WINDSURF_SKILL_TEMPLATE } from "../templates/w
 export class WindsurfAdapter implements ToolAdapter {
   id = "windsurf" as const;
   label = "Windsurf";
+  readonly capability = TOOL_CAPABILITIES.windsurf;
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [this.rulesFile(ctx)];

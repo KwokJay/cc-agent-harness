@@ -27,6 +27,31 @@ describe("runVerify", () => {
     expect(runVerify({ cwd: dir, writeState: false })).toBe(false);
   });
 
+  it("prints CI diagnose tip when all checks pass and not quiet", () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    writeFileSync(
+      join(dir, ".harness/config.yaml"),
+      `
+project:
+  name: t
+  type: backend
+  language: typescript
+tools: [cursor]
+workflows:
+  commands:
+    lint: echo lint
+  verification:
+    checks: [lint]
+`,
+      "utf-8",
+    );
+    expect(runVerify({ cwd: dir, quiet: false, writeState: false })).toBe(true);
+    const combined = log.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(combined).toContain("harn diagnose --json");
+    expect(combined).toContain("jq .summary");
+    log.mockRestore();
+  });
+
   it("runs checks in order and returns true when all pass", () => {
     writeFileSync(
       join(dir, ".harness/config.yaml"),
@@ -114,6 +139,32 @@ workflows:
 
     spawnSyncMock.mockReturnValue({ status: 1 });
     expect(runVerify({ cwd: dir, quiet: true, writeState: false })).toBe(false);
+  });
+
+  it("prints next-step hint when checks fail", () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    writeFileSync(
+      join(dir, ".harness/config.yaml"),
+      `
+project:
+  name: t
+  type: backend
+  language: typescript
+tools: [cursor]
+workflows:
+  commands:
+    lint: echo x
+  verification:
+    checks: [lint]
+`,
+      "utf-8",
+    );
+    spawnSyncMock.mockReturnValue({ status: 1 });
+    expect(runVerify({ cwd: dir, quiet: true, writeState: false })).toBe(false);
+    const combined = err.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(combined).toContain("re-run");
+    expect(combined).toContain("harn verify");
+    err.mockRestore();
   });
 
   it("writes .harness/state/last-verify.json on success", () => {

@@ -4,6 +4,7 @@ import { verificationWiringCheck } from "./checks/verification.js";
 import { cursorMcpJsonCheck } from "./checks/mcp-json.js";
 import { harnessWritableCheck } from "./checks/writable.js";
 import { skillDistributionCheck } from "./checks/skills.js";
+import { driftCheck } from "./checks/drift.js";
 
 /** Built-in checks; future community packs can append. */
 export const defaultDiagnoseChecks: DiagnoseCheck[] = [
@@ -12,6 +13,7 @@ export const defaultDiagnoseChecks: DiagnoseCheck[] = [
   skillDistributionCheck,
   cursorMcpJsonCheck,
   harnessWritableCheck,
+  driftCheck,
 ];
 
 export function summarizeDiagnoseIssues(issues: DiagnoseIssue[]): DiagnoseReport["summary"] {

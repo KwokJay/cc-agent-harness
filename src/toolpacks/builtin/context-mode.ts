@@ -9,6 +9,11 @@ export const contextModePlugin: ToolpackPlugin = {
   category: "context-engineering",
   version: "1.0.0",
   source: "builtin",
+  provenance: "official",
+  verificationHint: "After init, confirm Cursor MCP merges context-mode and `harn diagnose` stays clean.",
+  expectedOutcomes: [
+    "Cursor MCP config includes context-mode for session-continuous context and local indexing.",
+  ],
   install: { type: "npm", package: "context-mode" },
   relevantTools: ["cursor", "claude-code", "codex", "opencode"],
   generateFiles(tools, _projectName, cwd) {

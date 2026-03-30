@@ -1,4 +1,5 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { TOOL_CAPABILITIES } from "./types.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
 import { render, type TemplateContext } from "../template/engine.js";
@@ -10,6 +11,7 @@ import {
 export class CopilotAdapter implements ToolAdapter {
   id = "copilot" as const;
   label = "GitHub Copilot";
+  readonly capability = TOOL_CAPABILITIES.copilot;
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [this.instructions(ctx)];

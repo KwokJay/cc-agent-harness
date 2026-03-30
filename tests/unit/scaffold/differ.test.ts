@@ -1,6 +1,8 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { diffPlan } from "../../../src/scaffold/differ.js";
+import { readFileSync, writeFileSync } from "node:fs";
+import { diffPlan, detectDrift } from "../../../src/scaffold/differ.js";
 import { createFixture, type Fixture } from "../../helpers/mock-fs.js";
+import { materializeCanonicalScaffold } from "../../helpers/materialize-scaffold.js";
 
 let fixture: Fixture | undefined;
 
@@ -77,5 +79,49 @@ describe("diffPlan", () => {
     expect(result.modified).toEqual(["changed.txt"]);
     expect(result.added).toEqual(["brand-new.txt"]);
     expect(result.removed).toEqual(["deleted.txt"]);
+  });
+});
+
+describe("detectDrift", () => {
+  const validConfig = `
+project:
+  name: demo
+  type: backend
+  language: typescript
+tools:
+  - cursor
+workflows:
+  commands:
+    lint: echo ok
+  verification:
+    checks:
+      - lint
+custom_rules: []
+`;
+
+  it("reports modified file when disk differs from canonical scaffold", async () => {
+    fixture = await createFixture({
+      ".harness/config.yaml": validConfig,
+    });
+    await materializeCanonicalScaffold(fixture.dir);
+    const mdcPath = `${fixture.dir}/.cursor/rules/project.mdc`;
+    const before = readFileSync(mdcPath, "utf-8");
+    writeFileSync(mdcPath, `${before}\n<!-- user edit -->\n`, "utf-8");
+
+    const report = detectDrift(fixture.dir);
+    expect(report.clean).toBe(false);
+    expect(report.drifted.some((d) => d.path === ".cursor/rules/project.mdc" && d.status === "modified")).toBe(
+      true,
+    );
+  });
+
+  it("is clean when scaffold matches disk", async () => {
+    fixture = await createFixture({
+      ".harness/config.yaml": validConfig,
+    });
+    await materializeCanonicalScaffold(fixture.dir);
+    const report = detectDrift(fixture.dir);
+    expect(report.clean).toBe(true);
+    expect(report.drifted).toEqual([]);
   });
 });

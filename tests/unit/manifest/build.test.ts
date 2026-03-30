@@ -12,6 +12,8 @@ project:
   language: typescript
 tools:
   - cursor
+toolpacks:
+  - context-mode
 workflows:
   commands:
     lint: pnpm lint
@@ -51,6 +53,66 @@ describe("buildManifest", () => {
     expect(r.manifest.skills.count).toBe(1);
     expect(r.manifest.skills.ids).toContain("my-skill");
     expect(r.manifest.verification.checks).toEqual([{ name: "lint", command: "pnpm lint" }]);
+    expect(r.manifest.toolpacks).toEqual([
+      {
+        id: "context-mode",
+        packSource: "builtin",
+        packVersion: expect.any(String),
+        provenance: "official",
+        verificationHint: expect.stringContaining("diagnose"),
+      },
+    ]);
+    expect(r.manifest.adoption).toEqual({
+      toolsEnabled: 1,
+      toolpacksEnabled: 1,
+      officialToolpacksEnabled: 1,
+      skillsDiscovered: 1,
+      verificationChecksConfigured: 1,
+    });
+    expect(r.manifest.health.daysSinceLastVerify).toBeNull();
+    expect(r.manifest.health.generatedFilesTracked).toBe(0);
+    expect(r.manifest.health.generatedFilesPresentOnDisk).toBe(0);
+    expect(r.manifest.health.artifactCoverageRatio).toBe(1);
+  });
+
+  it("includes aggregation and approved_exceptions from config", async () => {
+    const yaml = minimalConfigYaml().replace(
+      "custom_rules: []",
+      `custom_rules: []
+aggregation:
+  org: acme
+  repo_slug: svc-a
+approved_exceptions:
+  - id: ex1
+    description: test
+`,
+    );
+    fx = await createFixture({
+      ".harness/config.yaml": yaml,
+      ".harness/skills/my-skill/SKILL.md": "---\nname: my-skill\n---\nBody\n",
+    });
+    const r = buildManifest(fx.dir);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.manifest.aggregation).toEqual({ org: "acme", repo_slug: "svc-a" });
+    expect(r.manifest.approved_exceptions).toEqual([{ id: "ex1", description: "test" }]);
+  });
+
+  it("reports artifact coverage when generated_files exist on disk", async () => {
+    fx = await createFixture({
+      ".harness/config.yaml": minimalConfigYaml().replace(
+        "custom_rules: []",
+        "custom_rules: []\ngenerated_files:\n  - AGENTS.md\n",
+      ),
+      ".harness/skills/my-skill/SKILL.md": "---\nname: my-skill\n---\nBody\n",
+      "AGENTS.md": "# Demo\n",
+    });
+    const r = buildManifest(fx.dir);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.manifest.health.generatedFilesTracked).toBe(1);
+    expect(r.manifest.health.generatedFilesPresentOnDisk).toBe(1);
+    expect(r.manifest.health.artifactCoverageRatio).toBe(1);
   });
 
   it("writeManifestFile creates JSON file", async () => {

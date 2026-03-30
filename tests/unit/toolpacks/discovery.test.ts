@@ -2,6 +2,8 @@ import { describe, it, expect, afterEach } from "vitest";
 import { discoverToolpacks } from "../../../src/toolpacks/discovery.js";
 import { createFixture, type Fixture } from "../../helpers/mock-fs.js";
 import { loadBuiltinToolpacks } from "../../../src/toolpacks/builtin/index.js";
+import { resolveToolpackProvenance } from "../../../src/toolpacks/official.js";
+import { getToolpack } from "../../../src/toolpacks/registry.js";
 
 let fixture: Fixture | undefined;
 
@@ -33,6 +35,29 @@ describe("loadBuiltinToolpacks", () => {
     for (const p of plugins) {
       expect(typeof p.version).toBe("string");
       expect(p.version.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("official builtins resolve provenance to official", () => {
+    const plugins = loadBuiltinToolpacks();
+    for (const p of plugins) {
+      expect(resolveToolpackProvenance(p)).toBe("official");
+    }
+  });
+
+  it("registry exposes provenance for builtins", async () => {
+    fixture = await createFixture({});
+    for (const id of ["context-mode", "rtk", "understand-anything", "gstack"]) {
+      const tp = getToolpack(id, fixture.dir);
+      expect(tp?.provenance).toBe("official");
+    }
+  });
+
+  it("builtins are not sharedPolicy by default", async () => {
+    fixture = await createFixture({});
+    for (const id of ["context-mode", "rtk", "understand-anything", "gstack"]) {
+      const tp = getToolpack(id, fixture.dir);
+      expect(tp?.sharedPolicy).toBe(false);
     }
   });
 });
@@ -111,5 +136,6 @@ describe("discoverToolpacks", () => {
     expect(npm).toBeDefined();
     expect(npm!.source).toBe("npm");
     expect(npm!.npmPackage).toBe("@agent-harness/toolpack-npm-demo");
+    expect(resolveToolpackProvenance(npm!)).toBe("community");
   });
 });

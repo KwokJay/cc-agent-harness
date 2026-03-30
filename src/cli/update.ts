@@ -87,6 +87,11 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
     mergeStrategy: opts.full || opts.overwrite ? "overwrite" : "keep-manual",
   });
 
+  const planDiff = diffPlan(cwd, plan.files, previousFiles);
+  const wouldChangeCount = planDiff.added.length + planDiff.modified.length;
+  const newCount = planDiff.added.length;
+  const removedCount = planDiff.removed.length;
+
   if (result.created.length > 0) {
     console.log(`  ${opts.dryRun ? "Would create" : "Created"}:`);
     for (const f of result.created) {
@@ -112,11 +117,18 @@ export async function runUpdate(opts: UpdateOptions = {}): Promise<void> {
   const changed = result.created.length + result.updated.length;
   if (opts.dryRun) {
     console.log(`\nDry run complete. ${changed} file(s) would be changed.`);
+    console.log(
+      `\n  Impact: ${wouldChangeCount} file(s) would change, ${newCount} new, ${removedCount} removed.`,
+    );
+    console.log(`  Next: run \`harn update\` to apply, or \`harn diagnose --json\` for CI.\n`);
   } else {
     const manifestResult = refreshHarnessManifest(cwd);
     if (!manifestResult.ok) {
       console.log(`\n  [WARN] Could not write .harness/manifest.json: ${manifestResult.errors.join("; ")}`);
     }
     console.log(`\nUpdate complete! ${changed} file(s) changed, ${result.unchanged.length} unchanged.`);
+    console.log(
+      `\n  Governance: run \`harn verify\` to confirm repo health, or \`harn diagnose --json\` for CI.\n`,
+    );
   }
 }

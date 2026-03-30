@@ -1,3 +1,9 @@
+/**
+ * Cursor-only MCP file helpers: read/merge **`.cursor/mcp.json`** (`mcpServers`).
+ * This is not a generic multi-tool MCP layer — other AI tools use their own config
+ * (see `docs/CAPABILITY-MATRIX.md`, `mcp` column). Do not route non-Cursor MCP
+ * operations through this module without extending the product contract.
+ */
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 

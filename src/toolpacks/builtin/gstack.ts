@@ -8,6 +8,9 @@ export const gstackPlugin: ToolpackPlugin = {
   category: "engineering-support",
   version: "1.0.0",
   source: "builtin",
+  provenance: "official",
+  verificationHint: "Use with `harn verify` / `harn diagnose --json` so merge gates stay auditable.",
+  expectedOutcomes: ["gstack skills scaffolded under `.claude/skills/gstack` for QA/review/ship workflows."],
   install: {
     type: "git-clone",
     repo: "https://github.com/garrytan/gstack.git",

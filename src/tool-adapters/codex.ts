@@ -1,10 +1,12 @@
 import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
+import { TOOL_CAPABILITIES } from "./types.js";
 import { render, type TemplateContext } from "../template/engine.js";
 import { CODEX_CONFIG_TOML_TEMPLATE, CODEX_SKILL_TEMPLATE } from "../templates/codex.js";
 
 export class CodexAdapter implements ToolAdapter {
   id = "codex" as const;
   label = "OpenAI Codex";
+  readonly capability = TOOL_CAPABILITIES.codex;
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files: GeneratedFile[] = [this.configToml(ctx)];
