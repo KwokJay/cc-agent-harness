@@ -110,7 +110,29 @@ export function getWorkspacePackageDirs(cwd: string): string[] {
           expandGlob(cwd, dir).forEach((d) => dirs.add(d));
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* malformed package.json or unreadable — skip workspace detection via package.json */
+    }
+  }
+
+  const pyprojectWsPath = join(cwd, "pyproject.toml");
+  if (existsSync(pyprojectWsPath)) {
+    try {
+      const content = readFileSync(pyprojectWsPath, "utf-8");
+      if (content.includes("[tool.uv.workspace]")) {
+        const membersMatch = content.match(/members\s*=\s*\[([^\]]*)\]/s);
+        if (membersMatch) {
+          const membersStr = membersMatch[1];
+          const memberPatterns = [...membersStr.matchAll(/['"]([^'"]+)['"]/g)].map((m) => m[1]);
+          for (const pattern of memberPatterns) {
+            const dir = pattern.replace(/\/\*$/, "");
+            expandGlob(cwd, dir).forEach((d) => dirs.add(d));
+          }
+        }
+      }
+    } catch {
+      /* unreadable pyproject.toml — skip uv workspace member detection */
+    }
   }
 
   if (dirs.size === 0) {
@@ -123,7 +145,9 @@ export function getWorkspacePackageDirs(cwd: string): string[] {
           dirs.add(entry);
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* directory may not exist or be unreadable (e.g. permission denied) — fall through gracefully */
+    }
   }
 
   return [...dirs];
@@ -141,7 +165,10 @@ function expandGlob(cwd: string, pattern: string): string[] {
       if (children.length > 0) {
         return children.map((entry) => `${pattern}/${entry}`);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* readdirSync failed on glob pattern directory — return bare pattern as fallback */
+      return [pattern];
+    }
     return [pattern];
   }
   return [];
@@ -168,7 +195,9 @@ function detectSingleProject(dir: string): DetectedProject | null {
       } else {
         signals.push({ language: "typescript", type: "backend", signals: ["package.json"] });
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* malformed or unreadable package.json — skip JS/TS detection */
+    }
   }
 
   if (existsSync(join(dir, "pyproject.toml")) || existsSync(join(dir, "setup.py")) || existsSync(join(dir, "requirements.txt"))) {
@@ -179,13 +208,16 @@ function detectSingleProject(dir: string): DetectedProject | null {
         if (content.includes("fastapi") || content.includes("FastAPI")) framework = "fastapi";
         else if (content.includes("django")) framework = "django";
         else if (content.includes("flask")) framework = "flask";
-      } catch { /* ignore */ }
+      } catch {
+        /* unreadable pyproject.toml — skip Python framework detection */
+      }
     }
     signals.push({ language: "python", framework, type: "backend", signals: ["python project files"] });
   }
 
   if (existsSync(join(dir, "go.mod"))) {
-    signals.push({ language: "go", type: "backend", signals: ["go.mod"] });
+    const framework = detectGoFramework(dir);
+    signals.push({ language: "go", framework, type: "backend", signals: ["go.mod"] });
   }
 
   if (existsSync(join(dir, "Cargo.toml"))) {
@@ -251,12 +283,25 @@ function isWorkspaceRoot(cwd: string): boolean {
   try {
     const pkg = JSON.parse(readFileSync(join(cwd, "package.json"), "utf-8"));
     if (pkg.workspaces) return true;
-  } catch { /* ignore */ }
+  } catch {
+    /* malformed or unreadable package.json — not a workspace root via npm */
+  }
   const cargoPath = join(cwd, "Cargo.toml");
   if (existsSync(cargoPath)) {
     try {
       if (readFileSync(cargoPath, "utf-8").includes("[workspace]")) return true;
-    } catch { /* ignore */ }
+    } catch {
+      /* unreadable Cargo.toml — skip cargo workspace check */
+    }
+  }
+  const pyprojectPath = join(cwd, "pyproject.toml");
+  if (existsSync(pyprojectPath)) {
+    try {
+      const content = readFileSync(pyprojectPath, "utf-8");
+      if (content.includes("[tool.uv.workspace]")) return true;
+    } catch {
+      /* unreadable pyproject.toml — skip uv workspace check */
+    }
   }
   return false;
 }
@@ -267,8 +312,25 @@ function detectWorkspaceFramework(cwd: string): string | undefined {
   try {
     const pkg = JSON.parse(readFileSync(join(cwd, "package.json"), "utf-8"));
     if (pkg.workspaces) return "npm-workspaces";
-  } catch { /* ignore */ }
+  } catch {
+    /* malformed or unreadable package.json — skip npm-workspaces detection */
+  }
   if (existsSync(join(cwd, "Cargo.toml"))) return "cargo";
+  return undefined;
+}
+
+function detectGoFramework(dir: string): string | undefined {
+  try {
+    const content = readFileSync(join(dir, "go.mod"), "utf-8");
+    if (content.includes("go-chi/chi")) return "chi";
+    if (content.includes("gin-gonic/gin")) return "gin";
+    if (content.includes("labstack/echo")) return "echo";
+    if (content.includes("gofiber/fiber")) return "fiber";
+    if (content.includes("gorilla/mux")) return "gorilla-mux";
+    if (content.includes("go-kratos/kratos")) return "kratos";
+  } catch {
+    /* unreadable go.mod */
+  }
   return undefined;
 }
 

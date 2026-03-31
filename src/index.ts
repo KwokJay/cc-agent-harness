@@ -17,7 +17,7 @@ export { generateFiles, type GenerateResult, type GenerateOptions } from "./scaf
 export { diffPlan, type DiffResult } from "./scaffold/differ.js";
 export { parseSkillFile, serializeSkill, hashBody, type ParsedSkill, type SkillSource } from "./skill-extraction/parser.js";
 export { mergeSkill, type MergeStrategy, type MergeDecision } from "./skill-extraction/merger.js";
-export { validateConfig, type HarnessConfig, type ValidationResult } from "./config/schema.js";
+export { validateConfig, HarnessConfigSchema, type HarnessConfig, type ValidationResult } from "./config/schema.js";
 export { loadHarnessConfig } from "./config/load-harness-config.js";
 export {
   runVerify,
@@ -65,7 +65,7 @@ export { buildAgentsMd, type AgentsMdOptions } from "./scaffold/agents-md-builde
 
 export { render, type TemplateContext } from "./template/engine.js";
 
-export { getAllToolpacks, getOptionalToolpacks, getToolpack, type Toolpack, type ToolpackCategory } from "./toolpacks/registry.js";
+export { getAllToolpacks, getOptionalToolpacks, getToolpack, clearToolpackCache, type Toolpack, type ToolpackCategory } from "./toolpacks/registry.js";
 export { generateSkillCreatorFiles } from "./toolpacks/skill-creator.js";
 export { generateDocsDirectory, generateDocsConstraintRule } from "./docs-scaffold/generator.js";
 export { generateSkillExtractionGuide } from "./skill-extraction/generator.js";

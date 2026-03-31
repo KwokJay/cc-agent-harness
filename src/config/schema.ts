@@ -1,8 +1,75 @@
+import { z } from "zod";
 import type { ProjectTypeId } from "../project-types/types.js";
 import type { ToolId } from "../tool-adapters/types.js";
 import { ALL_PROJECT_TYPE_IDS } from "../project-types/index.js";
-import { ALL_TOOL_IDS } from "../tool-adapters/types.js";
+import { ALL_TOOL_IDS } from "../tool-adapters/index.js";
 
+// ---------------------------------------------------------------------------
+// Zod schemas — input-level (optional fields match YAML parsing semantics)
+// ---------------------------------------------------------------------------
+
+const ProjectSchema = z.object({
+  name: z.string({ message: "'project.name' must be a non-empty string" })
+    .min(1, { message: "'project.name' must be a non-empty string" }),
+  type: z.string({ message: "'project.type' must be a string" })
+    .refine(
+      (val: string): val is ProjectTypeId => ALL_PROJECT_TYPE_IDS.includes(val as ProjectTypeId),
+      { message: `'project.type' must be one of: ${ALL_PROJECT_TYPE_IDS.join(", ")}` },
+    ),
+  language: z.string({ message: "'project.language' must be a string" }),
+  framework: z.string({ message: "'project.framework' must be a string if provided" }).optional(),
+});
+
+const ToolIdSchema = z.string().refine(
+  (val: string): val is ToolId => ALL_TOOL_IDS.includes(val as ToolId),
+  { message: `Unknown tool. Valid: ${ALL_TOOL_IDS.join(", ")}` },
+);
+
+const ApprovedExceptionSchema = z.object({
+  id: z.string({ message: "must be a string" })
+    .refine((val: string) => val.trim().length > 0, { message: "must be a non-empty string" }),
+  description: z.string({ message: "must be a string if provided" }).optional(),
+  target: z.string({ message: "must be a string if provided" }).optional(),
+});
+
+/**
+ * Zod schema for raw YAML input.
+ *
+ * `workflows` and its nested fields are optional at the input level to
+ * mirror the original permissive parsing: missing `workflows` is not an
+ * error — the output config simply receives empty defaults.
+ */
+const HarnessConfigInputSchema = z.object({
+  project: ProjectSchema,
+  tools: z.array(ToolIdSchema, { message: "'tools' must be an array" }),
+  workflows: z.object({
+    commands: z.record(z.string(), z.string(), { message: "'workflows.commands' must be an object" }).optional(),
+    verification: z.object({
+      checks: z.array(z.string(), { message: "'workflows.verification.checks' must be an array" }).optional(),
+    }, { message: "'workflows.verification' must be an object" }).optional(),
+  }, { message: "'workflows' must be an object if provided" }).optional(),
+  custom_rules: z.array(z.string(), { message: "'custom_rules' must be an array if provided" }).optional(),
+  toolpacks: z.array(z.string(), { message: "'toolpacks' must be an array if provided" }).optional(),
+  skip_docs: z.boolean({ message: "'skip_docs' must be a boolean if provided" }).optional(),
+  generated_files: z.array(z.string(), { message: "'generated_files' must be an array if provided" }).optional(),
+  aggregation: z.object({
+    org: z.string({ message: "'aggregation.org' must be a string if provided" }).optional(),
+    repo_slug: z.string({ message: "'aggregation.repo_slug' must be a string if provided" }).optional(),
+  }, { message: "'aggregation' must be an object if provided" }).optional(),
+  approved_exceptions: z.array(ApprovedExceptionSchema, { message: "'approved_exceptions' must be an array if provided" }).optional(),
+}).passthrough();
+
+// ---------------------------------------------------------------------------
+// Public types
+// ---------------------------------------------------------------------------
+
+/**
+ * Validated config — `workflows` is always present with defaults.
+ *
+ * We manually define this type (instead of z.infer) so that `workflows`
+ * and its nested fields are non-optional in the output, matching the
+ * original HarnessConfig interface consumers rely on.
+ */
 export interface HarnessConfig {
   project: {
     name: string;
@@ -15,25 +82,17 @@ export interface HarnessConfig {
     commands: Record<string, string>;
     verification: { checks: string[] };
   };
-  /** When absent in YAML, treated as "use resolver defaults" on init/update. */
   custom_rules?: string[];
   toolpacks?: string[];
   skip_docs?: boolean;
   generated_files?: string[];
-  /**
-   * Optional org/repo identity for aggregating manifests across repositories (Phase 6).
-   */
   aggregation?: {
     org?: string;
     repo_slug?: string;
   };
-  /**
-   * Approved, machine-readable exceptions (e.g. drift/verify scope) for aggregation consumers.
-   */
   approved_exceptions?: Array<{
     id: string;
     description?: string;
-    /** Optional path or glob hint for what this exception applies to. */
     target?: string;
   }>;
 }
@@ -44,167 +103,183 @@ export interface ValidationResult {
   errors: string[];
 }
 
-export function validateConfig(raw: unknown): ValidationResult {
-  const errors: string[] = [];
+// ---------------------------------------------------------------------------
+// validateConfig — Zod-backed implementation with backward-compatible messages
+// ---------------------------------------------------------------------------
 
+export function validateConfig(raw: unknown): ValidationResult {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     return { valid: false, errors: ["Config must be a YAML object"] };
   }
 
+  const errors: string[] = [];
   const obj = raw as Record<string, unknown>;
 
+  // -- project --
   const project = obj.project;
   if (!project || typeof project !== "object" || Array.isArray(project)) {
     errors.push("Missing or invalid 'project' section");
-  } else {
-    const p = project as Record<string, unknown>;
-    if (typeof p.name !== "string" || !p.name) {
-      errors.push("'project.name' must be a non-empty string");
-    }
-    if (typeof p.type !== "string") {
-      errors.push("'project.type' must be a string");
-    } else if (!ALL_PROJECT_TYPE_IDS.includes(p.type as ProjectTypeId)) {
-      errors.push(`'project.type' must be one of: ${ALL_PROJECT_TYPE_IDS.join(", ")} (got "${p.type}")`);
-    }
-    if (typeof p.language !== "string") {
-      errors.push("'project.language' must be a string");
-    }
-    if (p.framework !== undefined && typeof p.framework !== "string") {
-      errors.push("'project.framework' must be a string if provided");
-    }
   }
 
+  // -- tools (check for non-string items before Zod, for exact message match) --
   const tools = obj.tools;
-  if (!Array.isArray(tools)) {
-    errors.push("'tools' must be an array");
-  } else {
+  if (Array.isArray(tools)) {
     for (const tool of tools) {
       if (typeof tool !== "string") {
         errors.push(`'tools' contains non-string value: ${JSON.stringify(tool)}`);
-      } else if (!ALL_TOOL_IDS.includes(tool as ToolId)) {
-        errors.push(`Unknown tool '${tool}'. Valid: ${ALL_TOOL_IDS.join(", ")}`);
       }
     }
   }
 
-  const workflows = obj.workflows;
-  if (workflows !== undefined) {
-    if (typeof workflows !== "object" || Array.isArray(workflows)) {
-      errors.push("'workflows' must be an object if provided");
-    } else {
-      const w = workflows as Record<string, unknown>;
-      if (w.commands !== undefined && (typeof w.commands !== "object" || Array.isArray(w.commands))) {
-        errors.push("'workflows.commands' must be an object");
-      }
-      if (w.verification !== undefined) {
-        if (typeof w.verification !== "object" || Array.isArray(w.verification)) {
-          errors.push("'workflows.verification' must be an object");
-        } else {
-          const v = w.verification as Record<string, unknown>;
-          if (v.checks !== undefined && !Array.isArray(v.checks)) {
-            errors.push("'workflows.verification.checks' must be an array");
-          }
-        }
+  // -- approved_exceptions structural pre-check --
+  if (obj.approved_exceptions !== undefined && Array.isArray(obj.approved_exceptions)) {
+    const arr = obj.approved_exceptions as unknown[];
+    for (let i = 0; i < arr.length; i++) {
+      const row = arr[i];
+      if (typeof row !== "object" || row === null || Array.isArray(row)) {
+        errors.push(`'approved_exceptions[${i}]' must be an object`);
       }
     }
   }
 
-  if (obj.custom_rules !== undefined && !Array.isArray(obj.custom_rules)) {
-    errors.push("'custom_rules' must be an array if provided");
-  }
+  // Run Zod safeParse for full structural + type validation
+  const result = HarnessConfigInputSchema.safeParse(raw);
 
-  if (obj.toolpacks !== undefined && !Array.isArray(obj.toolpacks)) {
-    errors.push("'toolpacks' must be an array if provided");
-  }
-
-  if (obj.skip_docs !== undefined && typeof obj.skip_docs !== "boolean") {
-    errors.push("'skip_docs' must be a boolean if provided");
-  }
-
-  if (obj.generated_files !== undefined && !Array.isArray(obj.generated_files)) {
-    errors.push("'generated_files' must be an array if provided");
-  }
-
-  if (obj.aggregation !== undefined) {
-    if (typeof obj.aggregation !== "object" || obj.aggregation === null || Array.isArray(obj.aggregation)) {
-      errors.push("'aggregation' must be an object if provided");
-    } else {
-      const agg = obj.aggregation as Record<string, unknown>;
-      if (agg.org !== undefined && typeof agg.org !== "string") {
-        errors.push("'aggregation.org' must be a string if provided");
-      }
-      if (agg.repo_slug !== undefined && typeof agg.repo_slug !== "string") {
-        errors.push("'aggregation.repo_slug' must be a string if provided");
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      const path = issue.path.join(".");
+      const msg = mapIssueToMessage(path, issue, obj);
+      // Avoid duplicates with pre-validation errors
+      if (!errors.some((e) => e === msg)) {
+        errors.push(msg);
       }
     }
   }
 
-  if (obj.approved_exceptions !== undefined) {
-    if (!Array.isArray(obj.approved_exceptions)) {
-      errors.push("'approved_exceptions' must be an array if provided");
-    } else {
-      for (let i = 0; i < obj.approved_exceptions.length; i++) {
-        const row = obj.approved_exceptions[i];
-        if (typeof row !== "object" || row === null || Array.isArray(row)) {
-          errors.push(`'approved_exceptions[${i}]' must be an object`);
-          continue;
-        }
-        const r = row as Record<string, unknown>;
-        if (typeof r.id !== "string" || !r.id.trim()) {
-          errors.push(`'approved_exceptions[${i}].id' must be a non-empty string`);
-        }
-        if (r.description !== undefined && typeof r.description !== "string") {
-          errors.push(`'approved_exceptions[${i}].description' must be a string if provided`);
-        }
-        if (r.target !== undefined && typeof r.target !== "string") {
-          errors.push(`'approved_exceptions[${i}].target' must be a string if provided`);
-        }
-      }
-    }
+  if (errors.length > 0 || !result.success) {
+    return { valid: false, errors: errors.length > 0 ? errors : ["Validation failed"] };
   }
 
-  if (errors.length > 0) {
-    return { valid: false, errors };
-  }
-
-  const p = (project as Record<string, unknown>);
-  const w = (workflows as Record<string, unknown> | undefined);
-  const wv = w?.verification as Record<string, unknown> | undefined;
+  // Build the output config from Zod-parsed data, filling in defaults
+  // for optional fields exactly as the original implementation did.
+  const parsed = result.data;
 
   const config: HarnessConfig = {
-    project: {
-      name: p.name as string,
-      type: p.type as ProjectTypeId,
-      language: p.language as string,
-      framework: p.framework as string | undefined,
-    },
-    tools: tools as ToolId[],
+    project: parsed.project,
+    tools: parsed.tools,
     workflows: {
-      commands: ((w?.commands as Record<string, string>) ?? {}),
-      verification: { checks: ((wv?.checks as string[]) ?? []) },
+      commands: parsed.workflows?.commands ?? {},
+      verification: { checks: parsed.workflows?.verification?.checks ?? [] },
     },
-    ...(obj.custom_rules !== undefined ? { custom_rules: obj.custom_rules as string[] } : {}),
-    toolpacks: obj.toolpacks as string[] | undefined,
-    skip_docs: obj.skip_docs as boolean | undefined,
-    generated_files: obj.generated_files as string[] | undefined,
-    ...(obj.aggregation !== undefined && typeof obj.aggregation === "object" && !Array.isArray(obj.aggregation)
+    ...(obj.custom_rules !== undefined ? { custom_rules: parsed.custom_rules } : {}),
+    ...(obj.toolpacks !== undefined ? { toolpacks: parsed.toolpacks } : {}),
+    ...(obj.skip_docs !== undefined ? { skip_docs: parsed.skip_docs } : {}),
+    ...(obj.generated_files !== undefined ? { generated_files: parsed.generated_files } : {}),
+    ...(parsed.aggregation !== undefined
       ? {
           aggregation: {
-            ...((obj.aggregation as Record<string, unknown>).org !== undefined
-              ? { org: (obj.aggregation as { org: string }).org }
-              : {}),
-            ...((obj.aggregation as Record<string, unknown>).repo_slug !== undefined
-              ? { repo_slug: (obj.aggregation as { repo_slug: string }).repo_slug }
-              : {}),
+            ...(parsed.aggregation.org !== undefined ? { org: parsed.aggregation.org } : {}),
+            ...(parsed.aggregation.repo_slug !== undefined ? { repo_slug: parsed.aggregation.repo_slug } : {}),
           },
         }
       : {}),
-    ...(Array.isArray(obj.approved_exceptions)
-      ? {
-          approved_exceptions: obj.approved_exceptions as HarnessConfig["approved_exceptions"],
-        }
+    ...(parsed.approved_exceptions !== undefined
+      ? { approved_exceptions: parsed.approved_exceptions }
       : {}),
   };
 
   return { valid: true, config, errors: [] };
 }
+
+// ---------------------------------------------------------------------------
+// Error message mapping — backward-compatible with original hand-written messages
+// ---------------------------------------------------------------------------
+
+function mapIssueToMessage(
+  path: string,
+  issue: z.ZodIssue,
+  rawObj: Record<string, unknown>,
+): string {
+  // project section
+  if (path === "project" && issue.code === "invalid_type") {
+    return "Missing or invalid 'project' section";
+  }
+  if (path === "project.name") {
+    return issue.message || "'project.name' must be a non-empty string";
+  }
+  if (path === "project.type") {
+    if (issue.code === "invalid_type") return "'project.type' must be a string";
+    const p = rawObj.project as Record<string, unknown> | undefined;
+    return `'project.type' must be one of: ${ALL_PROJECT_TYPE_IDS.join(", ")} (got "${p?.type}")`;
+  }
+  if (path === "project.language") {
+    return "'project.language' must be a string";
+  }
+  if (path === "project.framework") {
+    return "'project.framework' must be a string if provided";
+  }
+
+  // tools
+  if (path === "tools") {
+    if (issue.code === "invalid_type") return "'tools' must be an array";
+    return issue.message;
+  }
+  if (path.startsWith("tools.")) {
+    const index = issue.path[1];
+    const tools = rawObj.tools;
+    if (Array.isArray(tools) && typeof tools[index as number] === "string") {
+      const toolVal = tools[index as number];
+      return `Unknown tool '${toolVal}'. Valid: ${ALL_TOOL_IDS.join(", ")}`;
+    }
+    return issue.message;
+  }
+
+  // workflows
+  if (path === "workflows") {
+    return "'workflows' must be an object if provided";
+  }
+  if (path === "workflows.commands") {
+    return "'workflows.commands' must be an object";
+  }
+  if (path === "workflows.verification") {
+    return "'workflows.verification' must be an object";
+  }
+  if (path === "workflows.verification.checks") {
+    return "'workflows.verification.checks' must be an array";
+  }
+
+  // optional top-level fields
+  if (path === "custom_rules") return "'custom_rules' must be an array if provided";
+  if (path === "toolpacks") return "'toolpacks' must be an array if provided";
+  if (path === "skip_docs") return "'skip_docs' must be a boolean if provided";
+  if (path === "generated_files") return "'generated_files' must be an array if provided";
+
+  // aggregation
+  if (path === "aggregation") return "'aggregation' must be an object if provided";
+  if (path === "aggregation.org") return "'aggregation.org' must be a string if provided";
+  if (path === "aggregation.repo_slug") return "'aggregation.repo_slug' must be a string if provided";
+
+  // approved_exceptions
+  if (path === "approved_exceptions") return "'approved_exceptions' must be an array if provided";
+  if (path.startsWith("approved_exceptions.")) {
+    return rewriteApprovedExceptionMessage(path, issue);
+  }
+
+  return issue.message;
+}
+
+function rewriteApprovedExceptionMessage(path: string, issue: z.ZodIssue): string {
+  const match = path.match(/^approved_exceptions\.(\d+)(?:\.(.*))?$/);
+  if (!match) return issue.message;
+  const [, index, field] = match;
+  if (!field) {
+    return `'approved_exceptions[${index}]' must be an object`;
+  }
+  if (field === "id") {
+    return `'approved_exceptions[${index}].id' must be a non-empty string`;
+  }
+  return `'approved_exceptions[${index}].${field}' must be a string if provided`;
+}
+
+// Export the schema for external use / advanced composition
+export { HarnessConfigInputSchema as HarnessConfigSchema };

@@ -167,18 +167,12 @@ export async function runInit(opts: InitOptions): Promise<void> {
     console.log(`\n  [WARN] Could not write .harness/manifest.json: ${manifestResult.errors.join("; ")}`);
   }
 
+  const adapters = listToolAdapters();
   for (const tool of tools) {
-    const labels: Record<ToolId, string> = {
-      cursor: "Cursor:      .cursor/rules/ ready",
-      "claude-code": "Claude Code: CLAUDE.md + .claude/skills/ ready",
-      copilot: "Copilot:     .github/copilot-instructions.md ready",
-      codex: "Codex:       .codex/config.toml + .agents/skills/ ready",
-      opencode: "OpenCode:    opencode.json + .opencode/skills/ ready",
-      windsurf: "Windsurf:    .windsurf/rules/ ready",
-      trae: "Trae:        .trae/rules/ ready",
-      augment: "Augment:     augment-guidelines.md + .augment/skills/ ready",
-    };
-    console.log(`  ${labels[tool]}`);
+    const adapter = adapters.find((a) => a.id === tool);
+    if (adapter) {
+      console.log(`  ${adapter.label}: ${adapter.setupSummary}`);
+    }
   }
 
   if (skipSkillExtraction) {
@@ -187,7 +181,7 @@ export async function runInit(opts: InitOptions): Promise<void> {
   } else {
     console.log("\n--- Skill Extraction (Step 2: AI-powered) ---\n");
 
-    const extractionResult = invokeSkillExtraction(cwd, tools);
+    const extractionResult = await invokeSkillExtraction(cwd, tools);
 
     for (const skip of extractionResult.skipped) {
       console.log(`  [SKIP] ${skip.tool}: ${describeExtractionSkip(skip)}`);

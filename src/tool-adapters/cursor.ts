@@ -1,8 +1,6 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
-import { TOOL_CAPABILITIES } from "./types.js";
-import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
-import { getChangelogConstraintParagraph } from "../changelog/generator.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent, ToolCapability } from "./types.js";
 import { render, type TemplateContext } from "../template/engine.js";
+import { buildProjectRuleContext } from "./shared.js";
 import {
   CURSOR_PROJECT_RULE_TEMPLATE,
   CURSOR_CODING_RULE_TEMPLATE,
@@ -12,7 +10,15 @@ import {
 export class CursorAdapter implements ToolAdapter {
   id = "cursor" as const;
   label = "Cursor";
-  readonly capability = TOOL_CAPABILITIES.cursor;
+  setupSummary = ".cursor/rules/ ready";
+  readonly capability: ToolCapability = {
+    tier: "first-class",
+    generation: true,
+    diagnose: true,
+    mcp: true,
+    extractionAuto: false,
+    extractionManualFallback: true,
+  };
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [
@@ -26,23 +32,7 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   private projectRule(ctx: ToolAdapterContext): GeneratedFile {
-    const verificationLines = ctx.verificationChecks.map((c) => {
-      const cmd = ctx.commands[c];
-      return cmd ? `\`${cmd}\`` : c;
-    });
-
-    const context: TemplateContext = {
-      projectName: ctx.projectName,
-      project: {
-        type: ctx.project.type,
-        language: ctx.project.language,
-        framework: ctx.project.framework,
-      },
-      customRules: ctx.customRules,
-      verificationLines,
-      docsConstraint: getDocsConstraintParagraph(),
-      changelogConstraint: getChangelogConstraintParagraph(),
-    };
+    const context: TemplateContext = buildProjectRuleContext(ctx);
 
     return {
       path: ".cursor/rules/project.mdc",

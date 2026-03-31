@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { CursorAdapter } from "../../../src/tool-adapters/cursor.js";
 import type { ToolAdapterContext } from "../../../src/tool-adapters/types.js";
-import { TOOL_CAPABILITIES } from "../../../src/tool-adapters/types.js";
+import { TOOL_CAPABILITIES } from "../../../src/tool-adapters/index.js";
 
 function baseContext(
   overrides: Partial<ToolAdapterContext> = {},
@@ -28,7 +28,7 @@ describe("CursorAdapter", () => {
   const adapter = new CursorAdapter();
 
   it("exposes first-class capability metadata aligned with TOOL_CAPABILITIES", () => {
-    expect(adapter.capability).toBe(TOOL_CAPABILITIES.cursor);
+    expect(adapter.capability).toStrictEqual(TOOL_CAPABILITIES.cursor);
     expect(adapter.capability.tier).toBe("first-class");
     expect(adapter.capability.mcp).toBe(true);
     expect(adapter.capability.extractionAuto).toBe(false);

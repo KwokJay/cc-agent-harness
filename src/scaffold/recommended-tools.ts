@@ -1,6 +1,6 @@
 import type { ToolId } from "../tool-adapters/types.js";
 import type { Toolpack } from "../toolpacks/registry.js";
-import { ALL_TOOL_IDS } from "../tool-adapters/types.js";
+import { ALL_TOOL_IDS } from "../tool-adapters/index.js";
 
 const TOOL_DOC_LINKS: Partial<Record<ToolId, string>> = {
   cursor: "https://docs.cursor.com/context/mcp",

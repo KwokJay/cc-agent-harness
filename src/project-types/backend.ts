@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ProjectTypeAdapter, DetectedProject, WorkflowCommands } from "./types.js";
 
@@ -19,6 +19,12 @@ export class BackendAdapter implements ProjectTypeAdapter {
     if (existsSync(join(cwd, "pom.xml")) || existsSync(join(cwd, "build.gradle")) || existsSync(join(cwd, "build.gradle.kts"))) {
       return { type: "backend", language: "java", signals: ["java build file"] };
     }
+    const pkgPath = join(cwd, "package.json");
+    if (existsSync(pkgPath)) {
+      const hasTs = existsSync(join(cwd, "tsconfig.json")) || existsSync(join(cwd, "tsconfig.jsonc"));
+      const language = hasTs ? "typescript" : "javascript";
+      return { type: "backend", language, signals: ["package.json"] };
+    }
     return null;
   }
 
@@ -27,7 +33,7 @@ export class BackendAdapter implements ProjectTypeAdapter {
       case "python":
         return { test: "python -m pytest", lint: "python -m ruff check .", fmt: "python -m ruff format ." };
       case "go":
-        return { test: "go test ./...", lint: "golangci-lint run", fmt: "gofmt -w .", build: "go build ./..." };
+        return { test: "go test ./...", lint: "go vet ./...", fmt: "gofmt -w .", build: "go build ./..." };
       case "rust":
         return { test: "cargo test", lint: "cargo clippy", fmt: "cargo fmt", build: "cargo build" };
       case "java":

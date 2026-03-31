@@ -81,7 +81,21 @@ export function runVerify(opts: VerifyOptions = {}): boolean {
 
     const result = spawnSync(cmd, { cwd, shell: true, stdio: "inherit" });
     const code = result.status ?? 1;
-    if (code !== 0) {
+
+    // Check for ENOENT (command not installed) or exit code 127 (command not found)
+    if (result.error && "code" in result.error && (result.error as NodeJS.ErrnoException).code === "ENOENT") {
+      const cmdName = cmd.split(/\s+/)[0];
+      const msg = `check "${check}": command "${cmdName}" not found — is ${cmdName} installed?`;
+      failures.push(check);
+      results.push({ check, ok: false });
+      console.error(`  [FAIL] ${msg}`);
+    } else if (code === 127) {
+      const cmdName = cmd.split(/\s+/)[0];
+      const msg = `check "${check}": command "${cmdName}" not found — is ${cmdName} installed?`;
+      failures.push(check);
+      results.push({ check, ok: false });
+      console.error(`  [FAIL] ${msg}`);
+    } else if (code !== 0) {
       const msg = `check "${check}" exited with code ${code}`;
       failures.push(check);
       results.push({ check, ok: false });

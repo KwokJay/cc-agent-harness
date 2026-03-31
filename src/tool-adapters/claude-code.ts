@@ -1,8 +1,8 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
-import { TOOL_CAPABILITIES } from "./types.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent, ToolCapability } from "./types.js";
+import { render, type TemplateContext } from "../template/engine.js";
+import { buildClaudeVerificationLines, buildVerifyCommand } from "./shared.js";
 import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
 import { getChangelogConstraintParagraph } from "../changelog/generator.js";
-import { render, type TemplateContext } from "../template/engine.js";
 import {
   CLAUDE_MD_TEMPLATE,
   CLAUDE_VERIFY_COMMAND_TEMPLATE,
@@ -12,7 +12,15 @@ import {
 export class ClaudeCodeAdapter implements ToolAdapter {
   id = "claude-code" as const;
   label = "Claude Code";
-  readonly capability = TOOL_CAPABILITIES["claude-code"];
+  setupSummary = "CLAUDE.md + .claude/skills/ ready";
+  readonly capability: ToolCapability = {
+    tier: "first-class",
+    generation: true,
+    diagnose: true,
+    mcp: false,
+    extractionAuto: true,
+    extractionManualFallback: true,
+  };
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files: GeneratedFile[] = [this.claudeMd(ctx)];
@@ -43,10 +51,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   private claudeMd(ctx: ToolAdapterContext): GeneratedFile {
-    const verificationLines = ctx.verificationChecks.map((c) => {
-      const cmd = ctx.commands[c];
-      return `Run \`${cmd ?? c}\``;
-    });
+    const verificationLines = buildClaudeVerificationLines(ctx);
 
     const context: TemplateContext = {
       projectName: ctx.projectName,
@@ -71,9 +76,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   private verifyCommand(ctx: ToolAdapterContext): GeneratedFile {
-    const verifyCommand = ctx.verificationChecks
-      .map((c) => ctx.commands[c] ?? c)
-      .join(" && ");
+    const verifyCommand = buildVerifyCommand(ctx);
 
     const context: TemplateContext = { verifyCommand };
 

@@ -3,11 +3,12 @@ import { discoverToolpacks } from "../../../src/toolpacks/discovery.js";
 import { createFixture, type Fixture } from "../../helpers/mock-fs.js";
 import { loadBuiltinToolpacks } from "../../../src/toolpacks/builtin/index.js";
 import { resolveToolpackProvenance } from "../../../src/toolpacks/official.js";
-import { getToolpack } from "../../../src/toolpacks/registry.js";
+import { getToolpack, clearToolpackCache } from "../../../src/toolpacks/registry.js";
 
 let fixture: Fixture | undefined;
 
 afterEach(async () => {
+  clearToolpackCache();
   await fixture?.cleanup();
   fixture = undefined;
 });

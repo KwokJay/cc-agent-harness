@@ -18,6 +18,9 @@ import { buildRalphLoopMarkdown } from "../templates/workflows/ralph-loop.js";
 import { buildMultiAgentPatternsMarkdown } from "../templates/workflows/multi-agent-patterns.js";
 import { buildRecommendedToolsMarkdown } from "./recommended-tools.js";
 import { getHarnessVersion } from "../cli/harness-version.js";
+import { getDefaultSkills } from "./default-skills.js";
+import { getSkillContents, generateSkillFiles } from "./preset-skills.js";
+import { generateHarnessFiles } from "./harness-config.js";
 
 export interface ResolveOptions {
   cwd: string;
@@ -128,7 +131,17 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
     files.push(...toolAdapter.generate(ctx));
   }
 
-  files.push(...generateHarnessFiles(opts, project, commands, verificationChecks, customRules));
+  files.push(...generateHarnessFiles({
+    projectName: opts.projectName,
+    projectType: project.type,
+    project,
+    tools: opts.tools,
+    commands,
+    checks: verificationChecks,
+    rules: customRules,
+    toolpacks: opts.toolpacks,
+    skipDocs: opts.skipDocs,
+  }));
 
   files.push(
     {
@@ -188,106 +201,4 @@ export function resolve(opts: ResolveOptions): ResolvedPlan {
   }
 
   return { project, tools: opts.tools, commands, verificationChecks, customRules, skills, files };
-}
-
-function getDefaultSkills(projectType: ProjectTypeId): string[] {
-  const map: Record<ProjectTypeId, string[]> = {
-    frontend: ["frontend-conventions"],
-    backend: ["api-conventions"],
-    fullstack: ["fullstack-workflow"],
-    monorepo: ["monorepo-discipline"],
-    docs: ["docs-quality"],
-  };
-  return map[projectType] ?? [];
-}
-
-function generateHarnessFiles(
-  opts: ResolveOptions,
-  project: DetectedProject,
-  commands: WorkflowCommands,
-  checks: string[],
-  rules: string[],
-): GeneratedFile[] {
-  const configObj: Record<string, unknown> = {
-    project: {
-      name: opts.projectName,
-      type: project.type,
-      language: project.language,
-      ...(project.framework ? { framework: project.framework } : {}),
-    },
-    tools: opts.tools,
-    workflows: {
-      commands,
-      verification: { checks },
-    },
-    custom_rules: rules,
-  };
-
-  const selectedPacks = opts.toolpacks ?? [];
-  if (selectedPacks.length > 0) {
-    configObj.toolpacks = selectedPacks;
-  }
-
-  if (opts.skipDocs) {
-    configObj.skip_docs = true;
-  }
-
-  return [
-    {
-      path: ".harness/config.yaml",
-      content: yamlStringify(configObj),
-      description: "Harness scaffold configuration",
-      source: "harness-config" as const,
-    },
-  ];
-}
-
-const SKILL_MAP: Record<ProjectTypeId, { name: string; description: string; content: string }> = {
-  frontend: {
-    name: "frontend-conventions",
-    description: "Frontend development conventions and component patterns",
-    content: "# Frontend Conventions\n\n- Use functional components with hooks.\n- Keep components small and focused on a single responsibility.\n- Co-locate tests with components.\n- Use CSS modules or utility classes; avoid inline styles.\n- Ensure all interactive elements are keyboard accessible.\n- Write meaningful alt text for images.",
-  },
-  backend: {
-    name: "api-conventions",
-    description: "API development conventions and error handling patterns",
-    content: "# API Conventions\n\n- Use consistent HTTP status codes and error response shapes.\n- Validate all input at the boundary layer.\n- Write docstrings or JSDoc for public functions.\n- Use structured logging with correlation IDs.\n- Keep route handlers thin; delegate to service modules.\n- Write integration tests for critical endpoints.",
-  },
-  fullstack: {
-    name: "fullstack-workflow",
-    description: "Fullstack project coordination and shared conventions",
-    content: "# Fullstack Workflow\n\n- Keep frontend and backend in clearly separated directories.\n- Share types or schemas between layers when possible.\n- Run both frontend and backend tests in CI.\n- Use API contracts to decouple frontend and backend work.\n- Prefer thin API routes that delegate to service logic.",
-  },
-  monorepo: {
-    name: "monorepo-discipline",
-    description: "Monorepo boundaries, dependency direction, and package hygiene",
-    content: "# Monorepo Discipline\n\n- Respect package boundaries; do not import across packages without explicit dependency.\n- Keep shared utilities in a dedicated package.\n- Run only affected tests and builds when possible.\n- Use workspace protocols for internal dependencies.\n- Document each package's purpose in its own README.",
-  },
-  docs: {
-    name: "docs-quality",
-    description: "Documentation quality standards and writing conventions",
-    content: "# Documentation Quality\n\n- Write in clear, concise language.\n- Use headings to create scannable structure.\n- Include code examples for technical concepts.\n- Keep sentences short; avoid jargon without explanation.\n- Proofread for grammar and consistency before publishing.",
-  },
-};
-
-function getSkillContents(projectType: ProjectTypeId): SkillContent[] {
-  const skill = SKILL_MAP[projectType];
-  if (!skill) return [];
-  return [{ name: skill.name, description: skill.description, body: skill.content }];
-}
-
-function generateSkillFiles(projectType: ProjectTypeId): GeneratedFile[] {
-  const skill = SKILL_MAP[projectType];
-  if (!skill) return [];
-
-  const skillMd = `---\nname: ${skill.name}\ndescription: ${skill.description}\n---\n\n${skill.content}\n`;
-
-  return [
-    {
-      path: `.harness/skills/${skill.name}/SKILL.md`,
-      content: skillMd,
-      description: `Preset skill (source): ${skill.name}`,
-      harnessSkillSource: "preset",
-    },
-  ];
 }

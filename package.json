@@ -1,6 +1,6 @@
 {
   "name": "cc-agent-harness",
-  "version": "0.7.0",
+  "version": "0.7.5",
   "description": "Harness scaffold tool — initialize AI-assisted development environments for any project type and AI coding tool.",
   "license": "MIT",
   "type": "module",
@@ -62,7 +62,8 @@
   "dependencies": {
     "@inquirer/prompts": "^8.3.2",
     "commander": "^13.1.0",
-    "yaml": "^2.7.0"
+    "yaml": "^2.7.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

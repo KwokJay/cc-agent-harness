@@ -1,12 +1,20 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
-import { TOOL_CAPABILITIES } from "./types.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent, ToolCapability } from "./types.js";
 import { render, type TemplateContext } from "../template/engine.js";
+import { buildVerifyCommand } from "./shared.js";
 import { OPENCODE_SKILL_TEMPLATE } from "../templates/opencode.js";
 
 export class OpenCodeAdapter implements ToolAdapter {
   id = "opencode" as const;
   label = "OpenCode";
-  readonly capability = TOOL_CAPABILITIES.opencode;
+  setupSummary = "opencode.json + .opencode/skills/ ready";
+  readonly capability: ToolCapability = {
+    tier: "baseline",
+    generation: true,
+    diagnose: false,
+    mcp: false,
+    extractionAuto: false,
+    extractionManualFallback: true,
+  };
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files: GeneratedFile[] = [this.configJson(ctx)];
@@ -39,9 +47,7 @@ export class OpenCodeAdapter implements ToolAdapter {
     };
 
     if (ctx.verificationChecks.length > 0) {
-      const verifyCmd = ctx.verificationChecks
-        .map((c) => ctx.commands[c] ?? c)
-        .join(" && ");
+      const verifyCmd = buildVerifyCommand(ctx);
       config.instructions = `After making changes, always run: ${verifyCmd}`;
     }
 

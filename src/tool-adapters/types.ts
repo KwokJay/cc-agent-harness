@@ -21,78 +21,6 @@ export interface ToolCapability {
   extractionManualFallback: true;
 }
 
-/** Canonical capability rows — keep in sync with adapter registrations. */
-export const TOOL_CAPABILITIES: Record<ToolId, ToolCapability> = {
-  cursor: {
-    tier: "first-class",
-    generation: true,
-    diagnose: true,
-    mcp: true,
-    extractionAuto: false,
-    extractionManualFallback: true,
-  },
-  "claude-code": {
-    tier: "first-class",
-    generation: true,
-    diagnose: true,
-    mcp: false,
-    extractionAuto: true,
-    extractionManualFallback: true,
-  },
-  codex: {
-    tier: "first-class",
-    generation: true,
-    diagnose: true,
-    mcp: false,
-    extractionAuto: true,
-    extractionManualFallback: true,
-  },
-  copilot: {
-    tier: "baseline",
-    generation: true,
-    diagnose: false,
-    mcp: false,
-    extractionAuto: false,
-    extractionManualFallback: true,
-  },
-  opencode: {
-    tier: "baseline",
-    generation: true,
-    diagnose: false,
-    mcp: false,
-    extractionAuto: false,
-    extractionManualFallback: true,
-  },
-  windsurf: {
-    tier: "baseline",
-    generation: true,
-    diagnose: false,
-    mcp: false,
-    extractionAuto: false,
-    extractionManualFallback: true,
-  },
-  trae: {
-    tier: "baseline",
-    generation: true,
-    diagnose: false,
-    mcp: false,
-    extractionAuto: false,
-    extractionManualFallback: true,
-  },
-  augment: {
-    tier: "baseline",
-    generation: true,
-    diagnose: false,
-    mcp: false,
-    extractionAuto: false,
-    extractionManualFallback: true,
-  },
-};
-
-export function getToolCapability(id: ToolId): ToolCapability {
-  return TOOL_CAPABILITIES[id];
-}
-
 export interface GeneratedFile {
   path: string;
   content: string;
@@ -122,9 +50,9 @@ export interface ToolAdapterContext {
 export interface ToolAdapter {
   id: ToolId;
   label: string;
-  /** Declared support surface — must match {@link TOOL_CAPABILITIES}[id]. */
+  /** Declared support surface — derived from adapter registration. */
   capability: ToolCapability;
+  /** Short summary of setup output, used in init logging. */
+  setupSummary: string;
   generate(ctx: ToolAdapterContext): GeneratedFile[];
 }
-
-export const ALL_TOOL_IDS: ToolId[] = ["cursor", "claude-code", "copilot", "codex", "opencode", "windsurf", "trae", "augment"];

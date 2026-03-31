@@ -1,14 +1,20 @@
-import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent } from "./types.js";
-import { TOOL_CAPABILITIES } from "./types.js";
-import { getDocsConstraintParagraph } from "../docs-scaffold/generator.js";
-import { getChangelogConstraintParagraph } from "../changelog/generator.js";
+import type { ToolAdapter, ToolAdapterContext, GeneratedFile, SkillContent, ToolCapability } from "./types.js";
 import { render, type TemplateContext } from "../template/engine.js";
+import { buildProjectRuleContext } from "./shared.js";
 import { TRAE_RULES_TEMPLATE, TRAE_SKILL_TEMPLATE } from "../templates/trae.js";
 
 export class TraeAdapter implements ToolAdapter {
   id = "trae" as const;
   label = "Trae";
-  readonly capability = TOOL_CAPABILITIES.trae;
+  setupSummary = ".trae/rules/ ready";
+  readonly capability: ToolCapability = {
+    tier: "baseline",
+    generation: true,
+    diagnose: false,
+    mcp: false,
+    extractionAuto: false,
+    extractionManualFallback: true,
+  };
 
   generate(ctx: ToolAdapterContext): GeneratedFile[] {
     const files = [this.rulesFile(ctx)];
@@ -19,23 +25,7 @@ export class TraeAdapter implements ToolAdapter {
   }
 
   private rulesFile(ctx: ToolAdapterContext): GeneratedFile {
-    const verificationLines = ctx.verificationChecks.map((c) => {
-      const cmd = ctx.commands[c];
-      return `\`${cmd ?? c}\``;
-    });
-
-    const context: TemplateContext = {
-      projectName: ctx.projectName,
-      project: {
-        type: ctx.project.type,
-        language: ctx.project.language,
-        framework: ctx.project.framework,
-      },
-      customRules: ctx.customRules,
-      verificationLines,
-      docsConstraint: getDocsConstraintParagraph(),
-      changelogConstraint: getChangelogConstraintParagraph(),
-    };
+    const context: TemplateContext = buildProjectRuleContext(ctx);
 
     return {
       path: ".trae/rules/project.md",

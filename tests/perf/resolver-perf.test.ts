@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { resolve as resolveScaffold } from "../../src/scaffold/resolver.js";
-import { ALL_TOOL_IDS } from "../../src/tool-adapters/types.js";
+import { ALL_TOOL_IDS } from "../../src/tool-adapters/index.js";
 import { createFixture, type Fixture } from "../helpers/mock-fs.js";
 
 /**

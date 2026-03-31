@@ -98,8 +98,18 @@ function pluginToToolpack(plugin: ToolpackPlugin): Toolpack {
   };
 }
 
+const toolpackCache = new Map<string, Toolpack[]>();
+
 function loadToolpacks(cwd: string): Toolpack[] {
-  return discoverToolpacks(cwd).map(pluginToToolpack);
+  const cached = toolpackCache.get(cwd);
+  if (cached) return cached;
+  const result = discoverToolpacks(cwd).map(pluginToToolpack);
+  toolpackCache.set(cwd, result);
+  return result;
+}
+
+export function clearToolpackCache(): void {
+  toolpackCache.clear();
 }
 
 export function getAllToolpacks(cwd: string = process.cwd()): Toolpack[] {
